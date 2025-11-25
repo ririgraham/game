@@ -223,13 +223,13 @@
 </head>
 <body>
 
-<h1>Кольцевая настольная игра</h1>
+<h1>КРУГОЯВЬ</h1>
 
 <div id="controls">
     <div id="colorChoice">
         Выбери цвет фишек:<br />
-        <button id="playWhiteBtn">Играть белыми</button>
-        <button id="playBlackBtn">Играть чёрными</button>
+        <button id="playWhiteBtn">БЕЛЫЕ</button>
+        <button id="playBlackBtn">ЧЕРНЫЕ</button>
     </div>
     <div id="rollControls" style="display:none;">
         <button id="rollBtn">Бросить кубики</button>
@@ -253,7 +253,6 @@
         <div id="middleRing" class="ring middle-ring"></div>
         <div id="innerRing" class="ring inner-ring"></div>
 
-        <div class="logo">ЗИМ<br/>ОРОДОК</div>
     </div>
 </div>
 
@@ -270,7 +269,7 @@
     // 6 символов — пока примерные, сюда потом вставишь свои
     const SYMBOLS = ["ᚯ", "ᛁ", "ᛉ", "ᛋ", "ᚻ", "ᚫ"];
 
-    const RING_SYMBOL_INDEXES = [0,1,2,3,4,5,0,1,2,3,4,5];
+ const RING_SYMBOL_INDEXES = [0,1,2,3,4,5,0,1,2,3,4,5];
 
     const MIDDLE_PAIRS = [
         [0,1],
@@ -294,4 +293,361 @@
 
     const RANDOM_ENDINGS = [
         { image: "images/ending1.jpg", text: "Вариант концовки №1." },
-        { image: "images/ending2.jpg
+        { image: "images/ending2.jpg", text: "Вариант концовки №2." }
+    ];
+
+    /* ================================
+       СОСТОЯНИЕ ИГРЫ
+       ================================ */
+
+    let phase = "chooseColor";
+    let playerColor = null;
+    let computerColor = null;
+
+    let outerRing = [];
+    let innerRing = [];
+    let middleRing = [];
+
+    let outerSegElems = [];
+    let innerSegElems = [];
+    let middleSegElems = [];
+
+    const outerRingElem = document.getElementById("outerRing");
+    const middleRingElem = document.getElementById("middleRing");
+    const innerRingElem  = document.getElementById("innerRing");
+    const boardElem      = document.getElementById("board");
+    const radialLinesElem = document.getElementById("radialLines");
+
+    /* ================================
+       УТИЛИТЫ
+       ================================ */
+
+    function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function setMessage(text) {
+        document.getElementById("messages").innerHTML = text;
+    }
+
+    function updateDiceDisplay(playerText, computerText) {
+        document.getElementById("playerDiceText").textContent   = playerText;
+        document.getElementById("computerDiceText").textContent = computerText;
+    }
+
+    function ringFull(ringArray) {
+        return ringArray.every(cell => cell.token !== null);
+    }
+
+    function middleFull() {
+        return middleRing.every(cell => cell.token !== null);
+    }
+
+    /* ================================
+       СЕТКА (РАДИАЛЫ + СЕГМЕНТЫ)
+       ================================ */
+
+    function createRadialLines() {
+        for (let i = 0; i < 12; i++) {
+            const line = document.createElement("div");
+            line.className = "radial-line";
+            line.style.transform = `translate(-50%, -50%) rotate(${i * 30}deg)`;
+            radialLinesElem.appendChild(line);
+        }
+    }
+
+    function createRingSegments() {
+        const outerRadius = 170;
+        const middleRadius = 120;
+        const innerRadius = 70;
+
+        for (let i = 0; i < 12; i++) {
+            const angle = i * 30; // градусов
+            const symbolIndex = RING_SYMBOL_INDEXES[i];
+
+            // ВНЕШНЕЕ КОЛЬЦО
+            const outerSeg = document.createElement("div");
+            outerSeg.className = "segment outer-seg";
+            outerSeg.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${outerRadius}px)`;
+            const outerLabel = document.createElement("span");
+            outerLabel.className = "symbol-text";
+            outerLabel.textContent = SYMBOLS[symbolIndex];
+            outerSeg.appendChild(outerLabel);
+            outerRingElem.appendChild(outerSeg);
+
+            outerRing.push({ symbolIndex, token: null });
+            outerSegElems.push(outerSeg);
+
+            // ВНУТРЕННЕЕ КОЛЬЦО
+            const innerSeg = document.createElement("div");
+            innerSeg.className = "segment inner-seg";
+            innerSeg.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${innerRadius}px)`;
+            const innerLabel = document.createElement("span");
+            innerLabel.className = "symbol-text";
+            innerLabel.textContent = SYMBOLS[symbolIndex];
+            innerSeg.appendChild(innerLabel);
+            innerRingElem.appendChild(innerSeg);
+
+            innerRing.push({ symbolIndex, token: null });
+            innerSegElems.push(innerSeg);
+        }
+
+        // СРЕДНЕЕ КОЛЬЦО: пары символов
+        for (let i = 0; i < 12; i++) {
+            const angle = i * 30;
+            const pair = MIDDLE_PAIRS[i];
+            const midSeg = document.createElement("div");
+            midSeg.className = "segment middle-seg";
+            midSeg.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${middleRadius}px)`;
+            const midLabel = document.createElement("span");
+            midLabel.className = "symbol-text";
+            midLabel.textContent = SYMBOLS[pair[0]] + " " + SYMBOLS[pair[1]];
+            midSeg.appendChild(midLabel);
+            middleRingElem.appendChild(midSeg);
+
+            middleRing.push({ pair: pair.slice(), token: null });
+            middleSegElems.push(midSeg);
+        }
+    }
+
+    createRadialLines();
+    createRingSegments();
+
+    /* ================================
+       РАЗМЕЩЕНИЕ ФИШЕК (РАУНД 1)
+       ================================ */
+
+    function placeTokenOnRing(color, symbolIndex) {
+        const ringArray   = color === "white" ? innerRing    : outerRing;
+        const segElements = color === "white" ? innerSegElems : outerSegElems;
+
+        for (let i = 0; i < ringArray.length; i++) {
+            const cell = ringArray[i];
+            if (cell.symbolIndex === symbolIndex && cell.token === null) {
+                cell.token = color;
+                segElements[i].classList.add(color === "white" ? "token-white" : "token-black");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /* ================================
+       ПЕРВЫЙ РАУНД
+       ================================ */
+
+    function handleRound1Roll() {
+        const playerSymIndex   = randomInt(0, SYMBOLS.length - 1);
+        const computerSymIndex = randomInt(0, SYMBOLS.length - 1);
+
+        const playerSym   = SYMBOLS[playerSymIndex];
+        const computerSym = SYMBOLS[computerSymIndex];
+
+        updateDiceDisplay(playerSym, computerSym);
+
+        const playerPlaced   = placeTokenOnRing(playerColor,   playerSymIndex);
+        const computerPlaced = placeTokenOnRing(computerColor, computerSymIndex);
+
+        let msg = `<b>Первый раунд.</b><br>
+                   Ты бросил: ${playerSym} (${playerPlaced ? "фишка поставлена" : "подходящих полей нет"})<br>
+                   Компьютер бросил: ${computerSym} (${computerPlaced ? "фишка поставлена" : "подходящих полей нет"})`;
+
+        const outerIsFull = ringFull(outerRing);
+        const innerIsFull = ringFull(innerRing);
+
+        if (outerIsFull && innerIsFull) {
+            phase = "round2";
+            setMessage(msg + `<br><br><b>Оба кольца заполнены. Начинается второй раунд.</b><br>Теперь ходы закрывают пары на среднем кольце, фишки переносятся с твоего кольца.`);
+        } else {
+            setMessage(msg + `<br><br>Продолжай бросать, пока оба кольца не будут полностью заполнены.`);
+        }
+    }
+
+    /* ================================
+       ПЕРЕНОС ФИШКИ НА СРЕДНЕЕ КОЛЬЦО (РАУНД 2)
+       ================================ */
+
+    function removeOneTokenFromRing(color) {
+        const ringArray   = color === "white" ? innerRing    : outerRing;
+        const segElements = color === "white" ? innerSegElems : outerSegElems;
+
+        for (let i = 0; i < ringArray.length; i++) {
+            const cell = ringArray[i];
+            if (cell.token === color) {
+                cell.token = null;
+                segElements[i].classList.remove(color === "white" ? "token-white" : "token-black");
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function placeTokenOnMiddle(color, s1Index, s2Index) {
+        const a = s1Index;
+        const b = s2Index;
+
+        for (let i = 0; i < middleRing.length; i++) {
+            const cell = middleRing[i];
+            if (cell.token !== null) continue;
+
+            const p0 = cell.pair[0];
+            const p1 = cell.pair[1];
+
+            const match = (p0 === a && p1 === b) || (p0 === b && p1 === a);
+            if (match) {
+                const removed = removeOneTokenFromRing(color);
+                if (!removed) {
+                    return { success: false, reason: "no_tokens_on_ring" };
+                }
+                cell.token = color;
+                middleSegElems[i].classList.add(color === "white" ? "token-white" : "token-black");
+                return { success: true, index: i };
+            }
+        }
+        return { success: false, reason: "no_such_pair_or_already_closed" };
+    }
+
+    /* ================================
+       ВТОРОЙ РАУНД
+       ================================ */
+
+    function handleRound2Roll() {
+        if (phase !== "round2") return;
+
+        const p1 = randomInt(0, SYMBOLS.length - 1);
+        const p2 = randomInt(0, SYMBOLS.length - 1);
+        const playerText = SYMBOLS[p1] + " + " + SYMBOLS[p2];
+
+        let log = `<b>Второй раунд.</b><br>Твой бросок: ${playerText}`;
+
+        const resultPlayer = placeTokenOnMiddle(playerColor, p1, p2);
+        if (resultPlayer.success) {
+            log += `<br>Комбинация найдена на среднем кольце — твоя фишка перенесена.`;
+        } else {
+            log += `<br>Подходящей незакрытой комбинации нет — ход переходит компьютеру.`;
+        }
+
+        updateDiceDisplay(playerText, "—");
+        setMessage(log);
+
+        if (middleFull()) {
+            finishGame();
+            return;
+        }
+
+        setTimeout(() => {
+            const c1 = randomInt(0, SYMBOLS.length - 1);
+            const c2 = randomInt(0, SYMBOLS.length - 1);
+            const compText = SYMBOLS[c1] + " + " + SYMBOLS[c2];
+
+            let log2 = document.getElementById("messages").innerHTML;
+            log2 += `<br><br>Ход компьютера: ${compText}`;
+
+            const resultComp = placeTokenOnMiddle(computerColor, c1, c2);
+            if (resultComp.success) {
+                log2 += `<br>Комбинация найдена — фишка компьютера перенесена.`;
+            } else {
+                log2 += `<br>Для компьютера тоже нет доступной комбинации. Ход возвращается тебе.`;
+            }
+
+            updateDiceDisplay(playerText, compText);
+            setMessage(log2);
+
+            if (middleFull()) {
+                finishGame();
+                return;
+            }
+        }, 600);
+    }
+
+    /* ================================
+       ЗАВЕРШЕНИЕ ИГРЫ
+       ================================ */
+
+    function finishGame() {
+        phase = "finished";
+        document.getElementById("rollBtn").disabled = true;
+
+        let whiteCount = 0;
+        let blackCount = 0;
+        for (const cell of middleRing) {
+            if (cell.token === "white") whiteCount++;
+            if (cell.token === "black") blackCount++;
+        }
+
+        boardElem.classList.add("board-animate");
+        setMessage(`<b>Все сегменты среднего кольца закрыты.</b><br>Белых фишек: ${whiteCount}, чёрных фишек: ${blackCount}.<br>Доска уходит — дальше тебя ждёт видение.`);
+
+        setTimeout(() => {
+            boardElem.style.display = "none";
+            showEnding(whiteCount, blackCount);
+        }, 1900);
+    }
+
+    function showEnding(whiteCount, blackCount) {
+        const endingArea = document.getElementById("endingArea");
+        const imgEl = document.getElementById("endingImage");
+        const textEl = document.getElementById("endingText");
+        endingArea.style.display = "block";
+
+        function showForestThenRandom() {
+            imgEl.src = FOREST_ENDING.image;
+            textEl.textContent = FOREST_ENDING.text;
+
+            setTimeout(() => {
+                const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
+                imgEl.src = random.image;
+                textEl.textContent = random.text;
+            }, 2500);
+        }
+
+        function showRandomOnly() {
+            const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
+            imgEl.src = random.image;
+            textEl.textContent = random.text;
+        }
+
+        if (whiteCount === blackCount) {
+            showForestThenRandom();
+        } else {
+            showRandomOnly();
+        }
+    }
+
+    /* ================================
+       ВЫБОР ЦВЕТА / НАЧАЛО
+       ================================ */
+
+    document.getElementById("playWhiteBtn").addEventListener("click", () => {
+        if (phase !== "chooseColor") return;
+        playerColor = "white";
+        computerColor = "black";
+        phase = "round1";
+        document.getElementById("colorChoice").style.display = "none";
+        document.getElementById("rollControls").style.display = "block";
+        setMessage(`Ты играешь <b>белыми</b> (внутреннее кольцо). Компьютер — чёрными (внешнее кольцо).<br><br>Первый раунд: вы с компьютером бросаете по одному кубику с символами и заполняете свои кольца.`);
+    });
+
+    document.getElementById("playBlackBtn").addEventListener("click", () => {
+        if (phase !== "chooseColor") return;
+        playerColor = "black";
+        computerColor = "white";
+        phase = "round1";
+        document.getElementById("colorChoice").style.display = "none";
+        document.getElementById("rollControls").style.display = "block";
+        setMessage(`Ты играешь <b>чёрными</b> (внешнее кольцо). Компьютер — белыми (внутреннее кольцо).<br><br>Первый раунд: вы с компьютером бросаете по одному кубику с символами и заполняете свои кольца.`);
+    });
+
+    document.getElementById("rollBtn").addEventListener("click", () => {
+        if (phase === "round1") {
+            handleRound1Roll();
+        } else if (phase === "round2") {
+            handleRound2Roll();
+        }
+    });
+
+    setMessage("Добро пожаловать. Сначала выбери цвет фишек, чтобы начать игру.");
+</script>
+
+</body>
+</html>
