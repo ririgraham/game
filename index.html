@@ -378,14 +378,7 @@
             // ВНУТРЕННЕЕ КОЛЬЦО
             const innerSeg = document.createElement("div");
             innerSeg.className = "segment inner-seg";
-
-            // добавляем локальные смещения
-            const innerAngle = angle + 7;       // поворот на 7°
-            const innerRad   = innerRadius + 10; // дальше от центра на 10px
-
-            innerSeg.style.transform =
-                `translate(-50%, -50%) rotate(${innerAngle}deg) translate(0, -${innerRad}px)`;
-
+            innerSeg.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${innerRadius}px)`;
             const innerLabel = document.createElement("span");
             innerLabel.className = "symbol-text";
             innerLabel.textContent = SYMBOLS[symbolIndex];
@@ -394,7 +387,6 @@
 
             innerRing.push({ symbolIndex, token: null });
             innerSegElems.push(innerSeg);
-
         }
 
             // СРЕДНЕЕ КОЛЬЦО: пары символов
@@ -592,49 +584,34 @@
     }
 
     function showEnding(whiteCount, blackCount) {
-    const endingArea = document.getElementById("endingArea");
-    const imgEl = document.getElementById("endingImage");
-    const textEl = document.getElementById("endingText");
-    endingArea.style.display = "block";
+        const endingArea = document.getElementById("endingArea");
+        const imgEl = document.getElementById("endingImage");
+        const textEl = document.getElementById("endingText");
+        endingArea.style.display = "block";
 
-    // Показать Финал "Лес"
-    function showForestOnly() {
-        imgEl.src = FOREST_ENDING.image;
-        textEl.textContent = "бла бла бла лес";
+        function showForestThenRandom() {
+            imgEl.src = FOREST_ENDING.image;
+            textEl.textContent = FOREST_ENDING.text;
 
-        // Очищаем старые клики
-        imgEl.style.cursor = "pointer";
-        imgEl.onclick = () => {
-            // Переход к рандомному финалу
+            setTimeout(() => {
+                const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
+                imgEl.src = random.image;
+                textEl.textContent = random.text;
+            }, 2500);
+        }
+
+        function showRandomOnly() {
             const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
             imgEl.src = random.image;
             textEl.textContent = random.text;
+        }
 
-            // После перехода убираем клик (чтобы картинка не была «кнопкой» бесконечно)
-            imgEl.onclick = null;
-            imgEl.style.cursor = "default";
-        };
+        if (whiteCount === blackCount) {
+            showForestThenRandom();
+        } else {
+            showRandomOnly();
+        }
     }
-
-    // Показать только рандомный финал (обычный)
-    function showRandomOnly() {
-        imgEl.style.cursor = "default";
-        imgEl.onclick = null;
-
-        const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
-        imgEl.src = random.image;
-        textEl.textContent = random.text;
-    }
-
-    if (whiteCount === blackCount) {
-        // Ничьё → только Лес + клик для перехода
-        showForestOnly();
-    } else {
-        // Обычный финал
-        showRandomOnly();
-    }
-}
-
 
     /* ================================
        ВЫБОР ЦВЕТА / НАЧАЛО
