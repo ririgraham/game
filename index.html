@@ -287,13 +287,13 @@
     ];
 
     const FOREST_ENDING = {
-        image: "images/forest.jpg",
-        text: "Лес. Баланс. Белых и чёрных камней на среднем кольце поровну."
+        image: "images/forest.png",
+        text: "Поздравляем. Вы попали в Лес."
     };
 
     const RANDOM_ENDINGS = [
-        { image: "images/ending1.jpg", text: "Вариант концовки №1." },
-        { image: "images/ending2.jpg", text: "Вариант концовки №2." }
+        { image: "images/ending1.png" },
+        { image: "images/ending2.png" }
     ];
 
     /* ================================
@@ -357,9 +357,9 @@
     }
 
     function createRingSegments() {
-        const outerRadius = 170;
-        const middleRadius = 120;
-        const innerRadius = 70;
+        const outerRadius = 220;
+        const middleRadius = 160;
+        const innerRadius = 100;
 
         for (let i = 0; i < 12; i++) {
             const angle = i * 30; // градусов
