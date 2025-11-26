@@ -357,12 +357,14 @@
     }
 
     function createRingSegments() {
-        const outerRadius = 240;
+        const outerRadius = 250;
         const middleRadius = 160;
-        const innerRadius = 80;
+        const innerRadius = 85;
 
+        const angleOffset = -15;
+        
         for (let i = 0; i < 12; i++) {
-            const angle = i * 30; // градусов
+            const angle = i * 30 + angleOffset; // градусов
             const symbolIndex = RING_SYMBOL_INDEXES[i];
 
             // ВНЕШНЕЕ КОЛЬЦО
