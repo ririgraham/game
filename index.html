@@ -394,13 +394,15 @@
             innerSegElems.push(innerSeg);
         }
 
-        // СРЕДНЕЕ КОЛЬЦО: пары символов
-        for (let i = 0; i < 12; i++) {
-            const angle = i * 30;
+            // СРЕДНЕЕ КОЛЬЦО: пары символов
+            for (let i = 0; i < 12; i++) {
+            const angle = i * 30 + 15; // <-- поворот на 15° только этого кольца
             const pair = MIDDLE_PAIRS[i];
             const midSeg = document.createElement("div");
             midSeg.className = "segment middle-seg";
-            midSeg.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${middleRadius}px)`;
+            midSeg.style.transform = 
+                `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${middleRadius}px)`;
+
             const midLabel = document.createElement("span");
             midLabel.className = "symbol-text";
             midLabel.textContent = SYMBOLS[pair[0]] + " " + SYMBOLS[pair[1]];
