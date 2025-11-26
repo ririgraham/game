@@ -59,6 +59,12 @@
         box-shadow: 0 0 20px rgba(0,0,0,0.7);
         overflow: hidden; /* режем линии по кругу */
     }
+    /* Подстройка фишек ТОЛЬКО на внутреннем кольце */
+    .inner-seg.token-white::after,
+    .inner-seg.token-black::after {
+    right: -2px;    /* было -6px → двигаем ближе к центру */
+    bottom: -2px;   /* было -6px → поднимаем ближе к центру */
+    }
 
     .ring {
         position: absolute;
