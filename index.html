@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Кольцевая настольная игра</title>
+<title>КРУГОЯВЬ</title>
 
 <style>
     body {
@@ -19,6 +19,10 @@
     h1 {
         margin-bottom: 10px;
         text-align: center;
+    }
+
+    #rollBtn {
+    display: none;
     }
 
     #boardScale {
@@ -197,7 +201,69 @@
         75%  { transform: translateY(-15px) scale(1.08) rotate(2deg); }
         100% { transform: translateY(-80px) scale(0.1) rotate(20deg); opacity: 0; }
     }
+    /* АНИМАЦИЯ КОСТЕЙ */
 
+    #diceArea {
+        margin-top: 15px;
+    }
+    
+    .dice-row {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 4px 0;
+    }
+    
+    .dice-label {
+        min-width: 150px;
+        text-align: right;
+        font-weight: 600;
+    }
+    
+    .dice-container {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .die {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        background: #f5f5f5;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #222;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
+    }
+    
+    .die-secondary {
+        opacity: 0.4; /* во втором раунде сделаем её активной */
+    }
+    
+    .die.rolling {
+        animation: dieRoll 0.5s linear;
+    }
+    
+    @keyframes dieRoll {
+        0%   { transform: rotate(0deg)   scale(1);   }
+        25%  { transform: rotate(90deg)  scale(1.1); }
+        50%  { transform: rotate(180deg) scale(0.9); }
+        75%  { transform: rotate(270deg) scale(1.05);}
+        100% { transform: rotate(360deg) scale(1);   }
+    }
+    
+    .dice-hint {
+        margin-top: 6px;
+        font-size: 13px;
+        opacity: 0.8;
+    }
+        
     /* ЗОНА КОНЦОВОК */
 
     #endingArea {
@@ -243,8 +309,21 @@
 <div id="messages"></div>
 
 <div id="diceArea">
-    <div><b>Твой бросок:</b> <span id="playerDiceText">—</span></div>
-    <div><b>Бросок компьютера:</b> <span id="computerDiceText">—</span></div>
+    <div class="dice-row">
+        <div class="dice-label">Твой бросок:</div>
+        <div class="dice-container">
+            <div id="playerDie1" class="die"></div>
+            <div id="playerDie2" class="die die-secondary"></div>
+        </div>
+    </div>
+    <div class="dice-row">
+        <div class="dice-label">Бросок компьютера:</div>
+        <div class="dice-container">
+            <div id="computerDie1" class="die"></div>
+            <div id="computerDie2" class="die die-secondary"></div>
+        </div>
+    </div>
+    <div class="dice-hint">Нажми на кость для броска.</div>
 </div>
 
 <div id="boardWrapper">
@@ -446,7 +525,27 @@
     /* ================================
        ПЕРВЫЙ РАУНД
        ================================ */
-
+        // ссылки на DOM-элементы костей
+    const playerDie1    = document.getElementById("playerDie1");
+    const playerDie2    = document.getElementById("playerDie2");
+    const computerDie1  = document.getElementById("computerDie1");
+    const computerDie2  = document.getElementById("computerDie2");
+    
+    // установить символ на грань кости
+    function setDieSymbol(dieElem, symbolIndex) {
+        dieElem.textContent = SYMBOLS[symbolIndex];
+    }
+    
+    // анимация броска: кость крутится и останавливается на нужном символе
+    function animateDie(dieElem, symbolIndex) {
+        dieElem.classList.add("rolling");
+        // во время анимации можно показывать рандом, но достаточно просто финала
+        setTimeout(() => {
+            setDieSymbol(dieElem, symbolIndex);
+            dieElem.classList.remove("rolling");
+        }, 450);
+    }
+    
     function handleRound1Roll() {
         const playerSymIndex   = randomInt(0, SYMBOLS.length - 1);
         const computerSymIndex = randomInt(0, SYMBOLS.length - 1);
@@ -454,7 +553,8 @@
         const playerSym   = SYMBOLS[playerSymIndex];
         const computerSym = SYMBOLS[computerSymIndex];
 
-        updateDiceDisplay(playerSym, computerSym);
+        animateDie(playerDie1, playerSymIndex);
+        animateDie(computerDie1, computerSymIndex);
 
         const playerPlaced   = placeTokenOnRing(playerColor,   playerSymIndex);
         const computerPlaced = placeTokenOnRing(computerColor, computerSymIndex);
@@ -527,18 +627,12 @@
 
         const p1 = randomInt(0, SYMBOLS.length - 1);
         const p2 = randomInt(0, SYMBOLS.length - 1);
-        const playerText = SYMBOLS[p1] + " + " + SYMBOLS[p2];
+        
+        animateDie(playerDie1, p1);
+        animateDie(playerDie2, p2);
+        // делаем вторую кость более "живой"
+        playerDie2.classList.remove("die-secondary");
 
-        let log = `<b>Второй раунд.</b><br>Твой бросок: ${playerText}`;
-
-        const resultPlayer = placeTokenOnMiddle(playerColor, p1, p2);
-        if (resultPlayer.success) {
-            log += `<br>Комбинация найдена на среднем кольце — твоя фишка перенесена.`;
-        } else {
-            log += `<br>Подходящей незакрытой комбинации нет — ход переходит компьютеру.`;
-        }
-
-        updateDiceDisplay(playerText, "—");
         setMessage(log);
 
         if (middleFull()) {
@@ -549,19 +643,11 @@
         setTimeout(() => {
             const c1 = randomInt(0, SYMBOLS.length - 1);
             const c2 = randomInt(0, SYMBOLS.length - 1);
-            const compText = SYMBOLS[c1] + " + " + SYMBOLS[c2];
+            
+            animateDie(computerDie1, c1);
+            animateDie(computerDie2, c2);
+            computerDie2.classList.remove("die-secondary");
 
-            let log2 = document.getElementById("messages").innerHTML;
-            log2 += `<br><br>Ход компьютера: ${compText}`;
-
-            const resultComp = placeTokenOnMiddle(computerColor, c1, c2);
-            if (resultComp.success) {
-                log2 += `<br>Комбинация найдена — фишка компьютера перенесена.`;
-            } else {
-                log2 += `<br>Для компьютера тоже нет доступной комбинации. Ход возвращается тебе.`;
-            }
-
-            updateDiceDisplay(playerText, compText);
             setMessage(log2);
 
             if (middleFull()) {
@@ -649,13 +735,17 @@
         setMessage(`Ты играешь <b>чёрными</b> (внешнее кольцо). Компьютер — белыми (внутреннее кольцо).<br><br>Первый раунд: вы с компьютером бросаете по одному кубику с символами и заполняете свои кольца.`);
     });
 
-    document.getElementById("rollBtn").addEventListener("click", () => {
+    function userRoll() {
         if (phase === "round1") {
             handleRound1Roll();
         } else if (phase === "round2") {
             handleRound2Roll();
         }
-    });
+    }
+
+document.getElementById("rollBtn").addEventListener("click", userRoll);
+playerDie1.addEventListener("click", userRoll);
+
 
     setMessage("Добро пожаловать. Сначала выбери цвет фишек, чтобы начать игру.");
 </script>
