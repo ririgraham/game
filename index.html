@@ -21,6 +21,10 @@
         text-align: center;
     }
 
+    #boardScale {
+    transform: scale(0.7);
+    }
+
     #controls, #messages, #diceArea {
         margin-top: 15px;
         text-align: center;
@@ -244,16 +248,18 @@
 </div>
 
 <div id="boardWrapper">
-    <div id="board" class="board">
-        <!-- радиальные линии (деление на 12 секторов) -->
-        <div id="radialLines"></div>
-
-        <!-- кольца с символами -->
-        <div id="outerRing" class="ring outer-ring"></div>
-        <div id="middleRing" class="ring middle-ring"></div>
-        <div id="innerRing" class="ring inner-ring"></div>
-
-       <div class="logo"></div>
+     <div id="boardScale">
+        <div id="board" class="board">
+            <!-- радиальные линии (деление на 12 секторов) -->
+            <div id="radialLines"></div>
+    
+            <!-- кольца с символами -->
+            <div id="outerRing" class="ring outer-ring"></div>
+            <div id="middleRing" class="ring middle-ring"></div>
+            <div id="innerRing" class="ring inner-ring"></div>
+         
+            <div class="logo"></div>
+        </div>
     </div>
 </div>
 
