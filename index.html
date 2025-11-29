@@ -624,38 +624,67 @@
 
     function handleRound2Roll() {
         if (phase !== "round2") return;
-
+    
+        // --- ХОД ИГРОКА ---
+    
         const p1 = randomInt(0, SYMBOLS.length - 1);
         const p2 = randomInt(0, SYMBOLS.length - 1);
-        
+    
+        // крутим кости игрока
         animateDie(playerDie1, p1);
         animateDie(playerDie2, p2);
-        // делаем вторую кость более "живой"
         playerDie2.classList.remove("die-secondary");
-
+    
+        const playerText = SYMBOLS[p1] + " + " + SYMBOLS[p2];
+    
+        let log = `<b>Второй раунд.</b><br>Твой бросок: ${playerText}`;
+    
+        const resultPlayer = placeTokenOnMiddle(playerColor, p1, p2);
+        if (resultPlayer.success) {
+            log += `<br>Комбинация найдена на среднем кольце — твоя фишка перенесена.`;
+        } else {
+            log += `<br>Подходящей незакрытой комбинации нет — ход переходит компьютеру.`;
+        }
+    
         setMessage(log);
-
+    
         if (middleFull()) {
             finishGame();
             return;
         }
-
+    
+        // --- ХОД КОМПЬЮТЕРА С ЗАДЕРЖКОЙ ---
+    
         setTimeout(() => {
             const c1 = randomInt(0, SYMBOLS.length - 1);
             const c2 = randomInt(0, SYMBOLS.length - 1);
-            
+    
+            // крутим кости компьютера
             animateDie(computerDie1, c1);
             animateDie(computerDie2, c2);
             computerDie2.classList.remove("die-secondary");
-
+    
+            const compText = SYMBOLS[c1] + " + " + SYMBOLS[c2];
+    
+            let log2 = document.getElementById("messages").innerHTML;
+            log2 += `<br><br>Ход компьютера: ${compText}`;
+    
+            const resultComp = placeTokenOnMiddle(computerColor, c1, c2);
+            if (resultComp.success) {
+                log2 += `<br>Комбинация найдена — фишка компьютера перенесена.`;
+            } else {
+                log2 += `<br>Для компьютера тоже нет доступной комбинации. Ход возвращается тебе.`;
+            }
+    
             setMessage(log2);
-
+    
             if (middleFull()) {
                 finishGame();
                 return;
             }
         }, 600);
     }
+
 
     /* ================================
        ЗАВЕРШЕНИЕ ИГРЫ
