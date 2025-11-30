@@ -15,7 +15,61 @@
         }
     }
 
-   body {
+    /* ===== МОБИЛЬНАЯ ВЕРСИЯ (ширина экрана до 600px) ===== */
+    @media (max-width: 600px) {
+    
+      /* Дадим телу страницы растягиваться по ширине,
+         а не цепляться за центр с фиксированной шириной контента */
+      body {
+        align-items: stretch;
+        padding: 10px 0;
+      }
+    
+      /* Обёртка доски занимает всю ширину и сама центрирует доску */
+      #boardWrapper {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 16px;
+      }
+    
+      /* На телефоне убираем масштабирование через transform,
+         чтобы не было рассинхрона размера и хитбокса */
+      #boardScale {
+        transform: none;
+        opacity: 0;
+        animation: boardIntroMobile 5s ease-out forwards;
+        transform-origin: center center;
+      }
+    
+      /* Анимация для мобильной версии:
+         доска вырастает из точки до своего нормального размера */
+      @keyframes boardIntroMobile {
+        from {
+          transform: scale(0) translateY(60px);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1) translateY(0);
+          opacity: 1;
+        }
+      }
+    
+      /* Делаем доску «резиновой»: максимум 460px,
+         но не больше 90% ширины экрана */
+      .board {
+        width: min(90vw, 460px);
+        height: min(90vw, 460px);
+      }
+    
+      /* Ореол за доской тоже уменьшим, чтобы не торчал за рамки */
+      #boardWrapper::before {
+        width: min(95vw, 480px);
+        height: min(95vw, 480px);
+      }
+    }
+
+    body {
         margin: 0;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         background: #111 url("images/background.png") center/cover fixed no-repeat;
