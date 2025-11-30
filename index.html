@@ -11,27 +11,26 @@
         }
     @media (max-width: 600px) {
         :root {
-            --dice-scale: 0.85;
+            --dice-scale: 1.5;
         }
     }
 
    body {
-       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-       background: #111 url("images/background.jpg") center/cover fixed no-repeat;
-       color: #eee;
-       display: flex;
-       flex-direction: column;
-       align-items: center;
-       padding: 20px;
-       margin: 0;
-       overflow-x: hidden;   /* ← чтобы ничего не "торчало" за экран */
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #111 url("images/background.png") center/cover fixed no-repeat;
+        color: #eee;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        overflow-x: hidden; /* чтобы ничего не вылезало за экран */
     }
-
-        /* Фон во время финала (можно настроить под себя) */
+    
     body.ending-mode {
-        background: #000; /* или другой цвет/градиент, если захочешь */
+        background: #000; /* фон во время финала */
     }
-
+    
     h1 {
         margin-bottom: 10px;
         text-align: center;
@@ -40,33 +39,14 @@
     #rollBtn {
     display: none;
     }
-        /* Планшеты / небольшие экраны */
-    @media (max-width: 900px) {
-        #boardScale {
-            transform: scale(0.75);
-        }
-    }
-    
-    /* Телефоны */
-    @media (max-width: 600px) {
-        #boardScale {
-            transform: scale(0.6);  /* можно поиграться числом, но 0.6 обычно норм */
-        }
-    
-        #boardWrapper::before {
-            width: 380px;  /* уменьшаем сияние, чтобы не вылезало за край */
-            height: 380px;
-        }
-    }
-
-    #boardScale {
-        transform: scale(0.75);
+   #boardScale {
+        transform: scale(0.85);
         transform-origin: center center;
         opacity: 0;
         animation: boardIntro 5s ease-out forwards;
     }
-
-/* Плавное появление доски при загрузке */
+    
+    /* плавное появление доски */
     @keyframes boardIntro {
         from {
             transform: scale(0) translateY(60px);
@@ -77,7 +57,26 @@
             opacity: 1;
         }
     }
-
+    
+    /* планшеты */
+    @media (max-width: 900px) {
+        #boardScale {
+            transform: scale(0.75);
+        }
+    }
+    
+    /* телефоны */
+    @media (max-width: 600px) {
+        #boardScale {
+            transform: scale(0.6);
+        }
+    
+        /* чуть уменьшим ореол, чтобы не вылазил за экран */
+        #boardWrapper::before {
+            width: 380px;
+            height: 380px;
+        }
+    }
 
     #controls, #messages, #diceArea {
         margin-top: 15px;
@@ -105,7 +104,7 @@
 
     #boardWrapper {
         position: relative;
-        margin-top: 0 auto;
+        margin-top: 20px auto 0 auto;
     }
     
     /* Красно-золотое сияние за доской */
@@ -299,22 +298,21 @@
     }
     
     .die {
-        width:  calc(40px * var(--dice-scale));
-        height: calc(40px * var(--dice-scale));
+        width:  calc(46px * var(--dice-scale));
+        height: calc(46px * var(--dice-scale));
         border-radius: 8px;
         background: #f5f5f5;
         box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: calc(24px * var(--dice-scale));
+        font-size: calc(26px * var(--dice-scale));
         color: #222;
         cursor: pointer;
         user-select: none;
         position: relative;
     }
 
-    
     .die-secondary {
        display: none; /* во втором раунде сделаем её активной */
     }
