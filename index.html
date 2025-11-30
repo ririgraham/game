@@ -12,12 +12,17 @@
 
     body {
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #111;
+        background: #111 url("images/background.png") center/cover fixed no-repeat;
         color: #eee;
         display: flex;
         flex-direction: column;
         align-items: center;
         padding: 20px;
+    }
+    
+    /* Фон во время финала (можно настроить под себя) */
+    body.ending-mode {
+        background: #000; /* или другой цвет/градиент, если захочешь */
     }
 
     h1 {
@@ -30,8 +35,24 @@
     }
 
     #boardScale {
-    transform: scale(0.7);
+        transform: scale(0.80);
+        transform-origin: center center;
+        opacity: 0;
+        animation: boardIntro 5s ease-out forwards;
     }
+
+/* Плавное появление доски при загрузке */
+    @keyframes boardIntro {
+        from {
+            transform: scale(0) translateY(60px);
+            opacity: 0;
+        }
+        to {
+            transform: scale(0.85) translateY(0);
+            opacity: 1;
+        }
+    }
+
 
     #controls, #messages, #diceArea {
         margin-top: 15px;
@@ -58,8 +79,30 @@
     /* ==== ДОСКА ==== */
 
     #boardWrapper {
-        margin-top: 20px;
+        position: relative;
+        margin-top: 20;
     }
+    
+    /* Красно-золотое сияние за доской */
+    #boardWrapper::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 520px;
+        height: 520px;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: radial-gradient(
+            circle,
+            rgba(255, 235, 170, 0.7) 0%,
+            rgba(230, 90, 40, 0.8) 35%,
+            transparent 70%
+        );
+        filter: blur(18px);
+        z-index: -1;
+    }
+
 
     .board {
         position: relative;
@@ -728,6 +771,8 @@
     }
 
     function showEnding(whiteCount, blackCount) {
+        document.body.classList.add("ending-mode");  // ← вот эта строка
+        
         const endingArea = document.getElementById("endingArea");
         const imgEl = document.getElementById("endingImage");
         const textEl = document.getElementById("endingText");
