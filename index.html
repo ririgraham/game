@@ -393,7 +393,10 @@
 
     const RANDOM_ENDINGS = [
         { image: "images/ending1.png" },
-        { image: "images/ending2.png" }
+        { image: "images/ending2.png" },
+        { image: "images/ending3.png" },
+        { image: "images/ending4.png" },
+        { image: "images/ending5.png" }
     ];
 
     /* ================================
@@ -729,30 +732,45 @@
         const imgEl = document.getElementById("endingImage");
         const textEl = document.getElementById("endingText");
         endingArea.style.display = "block";
-
-        function showForestThenRandom() {
+    
+        // ЛЕС: показываем картинку и текст, ждём КЛИК
+        function showForestOnly() {
             imgEl.src = FOREST_ENDING.image;
-            textEl.textContent = FOREST_ENDING.text;
-
-            setTimeout(() => {
+            textEl.textContent = "бла бла бла лес";
+    
+            // делаем картинку кликабельной
+            imgEl.style.cursor = "pointer";
+            imgEl.onclick = () => {
+                // при клике — переходим к рандомной концовке
                 const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
                 imgEl.src = random.image;
                 textEl.textContent = random.text;
-            }, 2500);
+    
+                // убираем кликабельность после перехода
+                imgEl.onclick = null;
+                imgEl.style.cursor = "default";
+            };
         }
-
+    
+        // Обычный рандомный финал (без Леса)
         function showRandomOnly() {
+            imgEl.style.cursor = "default";
+            imgEl.onclick = null;
+    
             const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
             imgEl.src = random.image;
             textEl.textContent = random.text;
         }
-
+    
         if (whiteCount === blackCount) {
-            showForestThenRandom();
+            // НИЧЬЯ → только Лес, затем по клику рандом
+            showForestOnly();
         } else {
+            // Победа/поражение → сразу рандом
             showRandomOnly();
         }
     }
+
 
     /* ================================
        ВЫБОР ЦВЕТА / НАЧАЛО
