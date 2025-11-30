@@ -320,18 +320,38 @@
         max-width: 600px;
         display: none;
     }
-
+    
+    /* контейнер для картинки и текста */
+    #endingImageWrapper {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+    }
+    
+    /* сама картинка финала */
     #endingImage {
+        display: block;
         max-width: 100%;
         border-radius: 12px;
         box-shadow: 0 0 15px rgba(0,0,0,0.8);
-        margin-bottom: 10px;
+    }
+    
+    /* текст поверх нижней части картинки */
+    #endingText {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 14px 18px;
+        background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
+        color: #f5f5f5;
+        font-size: 16px;
+        line-height: 1.4;
+        text-align: left; /* можно поменять на center, если хочешь */
+        border-radius: 0 0 12px 12px;
+        box-sizing: border-box;
     }
 
-    #endingText {
-        font-size: 18px;
-        line-height: 1.4;
-    }
 
     #diceArea {
         font-size: 18px;
@@ -400,9 +420,12 @@
 </div>
 
 <div id="endingArea">
-    <img id="endingImage" src="" alt="ending" />
-    <div id="endingText"></div>
+    <div id="endingImageWrapper">
+        <img id="endingImage" src="" alt="ending" />
+        <div id="endingText"></div>
+    </div>
 </div>
+
 
 <script>
     /* ================================
@@ -445,6 +468,17 @@
     /* ================================
        СОСТОЯНИЕ ИГРЫ
        ================================ */
+    function hideUiForEnding() {
+        const controls = document.getElementById("controls");
+        const messages = document.getElementById("messages");
+        const playerDiceArea = document.getElementById("playerDiceArea");
+        const computerDiceArea = document.getElementById("computerDiceArea");
+    
+        if (controls) controls.style.display = "none";
+        if (messages) messages.style.display = "none";
+        if (playerDiceArea) playerDiceArea.style.display = "none";
+        if (computerDiceArea) computerDiceArea.style.display = "none";
+    }
 
     let phase = "chooseColor";
     let playerColor = null;
@@ -760,6 +794,8 @@
             if (cell.token === "white") whiteCount++;
             if (cell.token === "black") blackCount++;
         }
+
+        hideUiForEnding();
 
         boardElem.classList.add("board-animate");
         setMessage(`<b>Все сегменты среднего кольца закрыты.</b><br>Белых фишек: ${whiteCount}, чёрных фишек: ${blackCount}.<br>Доска уходит — дальше тебя ждёт видение.`);
