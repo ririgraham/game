@@ -97,9 +97,11 @@
 
     /* ==== ДОСКА ==== */
 
+    /* ==== ДОСКА ==== */
+
     #boardWrapper {
         position: relative;
-        margin-top: 20px auto 0 auto;
+        margin: 20px auto 0 auto; /* центрируем */
     }
     
     /* Красно-золотое сияние за доской */
@@ -108,8 +110,8 @@
         position: absolute;
         top: 50%;
         left: 50%;
-        width: calc(min(460px, 90vw) + 40px);
-        height: calc(min(460px, 90vw) + 40px);
+        width: 520px;
+        height: 520px;
         transform: translate(-50%, -50%);
         border-radius: 50%;
         background: radial-gradient(
@@ -119,20 +121,59 @@
             transparent 70%
         );
         filter: blur(18px);
-        z-index: -1;
+        z-index: -1; /* ореол всегда под доской */
     }
-
-
+    
+    /* сама доска — фиксированный размер, как было изначально */
     .board {
-        position: relative;
-        width: min(460px, 90vw);
-        height: min(460px, 90vw);
+        width: 520px;
+        height: 520px;
         border-radius: 50%;
-        background: #4b1f14; /* тёмно-красно-коричневый как на фото */
-        border: 14px solid #b0b0b0; /* серая внешняя кайма */
-        box-shadow: 0 0 20px rgba(0,0,0,0.7);
-        overflow: hidden; /* режем линии по кругу */
+        position: relative;
+        margin: 0 auto;
+        /* здесь оставь свои фон/рамку/тени как были */
     }
+    
+    /* обёртка для масштабирования и анимации появления */
+    #boardScale {
+        transform: scale(0.85);              /* базовый размер на десктопе */
+        transform-origin: center center;
+        opacity: 0;
+        animation: boardIntro 5s ease-out forwards;
+    }
+    
+    /* плавное появление доски */
+    @keyframes boardIntro {
+        from {
+            transform: scale(0.2) translateY(60px); /* не из нуля, чтобы не было ощущения, что "сияние без доски" */
+            opacity: 0;
+        }
+        to {
+            transform: scale(0.85) translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    /* планшеты */
+    @media (max-width: 900px) {
+        #boardScale {
+            transform: scale(0.7);
+        }
+    }
+    
+    /* телефоны */
+    @media (max-width: 600px) {
+        #boardScale {
+            transform: scale(0.6); /* можно поиграться: 0.55–0.65 */
+        }
+    
+        /* уменьшаем ореол, чтобы не вылезал за края экрана */
+        #boardWrapper::before {
+            width: 400px;
+            height: 400px;
+        }
+    }
+
     /* Подстройка фишек ТОЛЬКО на внутреннем кольце */
     .inner-seg.token-white::after,
     .inner-seg.token-black::after {
