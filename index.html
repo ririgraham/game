@@ -11,7 +11,6 @@
         }
 
     body {
-        margin: 0;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         background: #111 url("images/background.png") center/cover fixed no-repeat;
         color: #eee;
@@ -19,13 +18,13 @@
         flex-direction: column;
         align-items: center;
         padding: 20px;
-        overflow-x: hidden; /* чтобы ничего не вылезало за экран */
     }
     
+    /* Фон во время финала (можно настроить под себя) */
     body.ending-mode {
-        background: #000; /* фон во время финала */
+        background: #000; /* или другой цвет/градиент, если захочешь */
     }
-    
+
     h1 {
         margin-bottom: 10px;
         text-align: center;
@@ -34,14 +33,15 @@
     #rollBtn {
     display: none;
     }
+
     #boardScale {
-        transform: scale(0.85);
+        transform: scale(0.75);
         transform-origin: center center;
         opacity: 0;
         animation: boardIntro 5s ease-out forwards;
     }
-    
-    /* плавное появление доски */
+
+/* Плавное появление доски при загрузке */
     @keyframes boardIntro {
         from {
             transform: scale(0) translateY(60px);
@@ -52,26 +52,7 @@
             opacity: 1;
         }
     }
-    
-    /* планшеты */
-    @media (max-width: 900px) {
-        #boardScale {
-            transform: scale(0.75);
-        }
-    }
-    
-    /* телефоны */
-    @media (max-width: 600px) {
-        #boardScale {
-            transform: scale(0.6);
-        }
-    
-        /* чуть уменьшим ореол, чтобы не вылазил за экран */
-        #boardWrapper::before {
-            width: 380px;
-            height: 380px;
-        }
-    }
+
 
     #controls, #messages, #diceArea {
         margin-top: 15px;
@@ -97,11 +78,9 @@
 
     /* ==== ДОСКА ==== */
 
-    /* ==== ДОСКА ==== */
-
     #boardWrapper {
         position: relative;
-        margin: 20px auto 0 auto; /* центрируем */
+        margin-top: 20;
     }
     
     /* Красно-золотое сияние за доской */
@@ -121,59 +100,20 @@
             transparent 70%
         );
         filter: blur(18px);
-        z-index: -1; /* ореол всегда под доской */
-    }
-    
-    /* сама доска — фиксированный размер, как было изначально */
-    .board {
-        width: 520px;
-        height: 520px;
-        border-radius: 50%;
-        position: relative;
-        margin: 0 auto;
-        /* здесь оставь свои фон/рамку/тени как были */
-    }
-    
-    /* обёртка для масштабирования и анимации появления */
-    #boardScale {
-        transform: scale(0.85);              /* базовый размер на десктопе */
-        transform-origin: center center;
-        opacity: 0;
-        animation: boardIntro 5s ease-out forwards;
-    }
-    
-    /* плавное появление доски */
-    @keyframes boardIntro {
-        from {
-            transform: scale(0.2) translateY(60px); /* не из нуля, чтобы не было ощущения, что "сияние без доски" */
-            opacity: 0;
-        }
-        to {
-            transform: scale(0.85) translateY(0);
-            opacity: 1;
-        }
-    }
-    
-    /* планшеты */
-    @media (max-width: 900px) {
-        #boardScale {
-            transform: scale(0.7);
-        }
-    }
-    
-    /* телефоны */
-    @media (max-width: 600px) {
-        #boardScale {
-            transform: scale(0.6); /* можно поиграться: 0.55–0.65 */
-        }
-    
-        /* уменьшаем ореол, чтобы не вылезал за края экрана */
-        #boardWrapper::before {
-            width: 400px;
-            height: 400px;
-        }
+        z-index: -1;
     }
 
+
+    .board {
+        position: relative;
+        width: 580px;
+        height: 580px;
+        border-radius: 50%;
+        background: #4b1f14; /* тёмно-красно-коричневый как на фото */
+        border: 14px solid #b0b0b0; /* серая внешняя кайма */
+        box-shadow: 0 0 20px rgba(0,0,0,0.7);
+        overflow: hidden; /* режем линии по кругу */
+    }
     /* Подстройка фишек ТОЛЬКО на внутреннем кольце */
     .inner-seg.token-white::after,
     .inner-seg.token-black::after {
@@ -334,21 +274,22 @@
     }
     
     .die {
-        width:  calc(46px * var(--dice-scale));
-        height: calc(46px * var(--dice-scale));
+        width:  calc(40px * var(--dice-scale));
+        height: calc(40px * var(--dice-scale));
         border-radius: 8px;
         background: #f5f5f5;
         box-shadow: 0 2px 6px rgba(0,0,0,0.5);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: calc(26px * var(--dice-scale));
+        font-size: calc(24px * var(--dice-scale));
         color: #222;
         cursor: pointer;
         user-select: none;
         position: relative;
     }
 
+    
     .die-secondary {
        display: none; /* во втором раунде сделаем её активной */
     }
@@ -406,7 +347,7 @@
         color: #f5f5f5;
         font-size: 16px;
         line-height: 1.4;
-        text-align: center; /* можно поменять на center, если хочешь */
+        text-align: left; /* можно поменять на center, если хочешь */
         border-radius: 0 0 12px 12px;
         box-sizing: border-box;
     }
@@ -513,15 +454,15 @@
 
     const FOREST_ENDING = {
         image: "images/forest.png",
-        text: "Поздравляем. Вы попали в Лес. Игра окончена."
+        text: "Поздравляем. Вы попали в Лес."
     };
 
     const RANDOM_ENDINGS = [
-        { image: "images/ending1.png", text: "блаблабла" },
-        { image: "images/ending2.png", text: "блаблабла" },
-        { image: "images/ending3.png", text: "блаблабла" },
-        { image: "images/ending4.png", text: "блаблабла" },
-        { image: "images/ending5.png", text: "блаблабла" }
+        { image: "images/ending1.png" },
+        { image: "images/ending2.png" },
+        { image: "images/ending3.png" },
+        { image: "images/ending4.png" },
+        { image: "images/ending5.png" }
     ];
 
     /* ================================
