@@ -1,896 +1,1047 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>КРУГОЯВЬ</title>
+#JSON
 
-<style>
-    :root {
-        --dice-scale: 2;  /* тут меняешь размер: 1 = 100%, 1.3 = 130%, 0.8 = 80% */
+{
+
+  "name": "elder-runes-game",
+
+  "private": true,
+
+  "version": "1.0.0",
+
+  "type": "module",
+
+  "scripts": {
+
+    "dev": "vite --port=3000 --host=0.0.0.0",
+
+    "build": "vite build",
+
+    "preview": "vite preview",
+
+    "lint": "tsc --noEmit"
+
+  },
+
+  "dependencies": {
+
+    "@tailwindcss/vite": "^4.1.14",
+
+    "@vitejs/plugin-react": "^5.0.4",
+
+    "lucide-react": "^0.546.0",
+
+    "react": "^19.0.1",
+
+    "react-dom": "^19.0.1",
+
+    "vite": "^6.2.3",
+
+    "motion": "^12.23.24",
+
+    "tailwindcss": "^4.1.14"
+
+  },
+
+  "devDependencies": {
+
+    "@types/node": "^22.14.0",
+
+    "@types/react": "^19.0.1",
+
+    "@types/react-dom": "^19.0.1",
+
+    "typescript": "~5.8.2"
+
+  }
+
+}
+
+
+
+
+
+
+
+#src/types.ts
+
+
+
+
+
+
+
+import { Rune } from './constants/runes';
+
+
+
+export type PlayerColor = 'black' | 'white';
+
+
+
+export enum GameStage {
+
+  Setup = 'SETUP', 
+
+  Round1 = 'ROUND1', 
+
+  Round2 = 'ROUND2', 
+
+  Finished = 'FINISHED'
+
+}
+
+
+
+export interface GameState {
+
+  stage: GameStage;
+
+  playerColor: PlayerColor | null;
+
+  turn: PlayerColor;
+
+  outerChips: (PlayerColor | null)[];
+
+  innerChips: (PlayerColor | null)[];
+
+  middleChips: (PlayerColor | null)[];
+
+  lastRoll: {
+
+    player: Rune[];
+
+    ai: Rune[];
+
+  };
+
+  isRolling: boolean;
+
+  message: string;
+
+  failedRolls: {
+
+    black: number;
+
+    white: number;
+
+  };
+
+}
+
+
+
+
+
+
+
+
+
+#src/constants/runes.ts
+
+
+
+
+
+export interface Rune {
+
+  id: string;
+
+  char: string;
+
+  name: string;
+
+}
+
+
+
+export const RUNES: Rune[] = [
+
+  { id: 'fehu', char: 'ᚠ', name: 'Fehu' },
+
+  { id: 'uruz', char: 'ᚢ', name: 'Uruz' },
+
+  { id: 'thurisaz', char: 'ᚦ', name: 'Thurisaz' },
+
+  { id: 'ansuz', char: 'ᚨ', name: 'Ansuz' },
+
+  { id: 'raidho', char: 'ᚱ', name: 'Raidho' },
+
+  { id: 'kenaz', char: 'ᚲ', name: 'Kenaz' },
+
+  { id: 'gebo', char: 'ᚷ', name: 'Gebo' },
+
+  { id: 'wunjo', char: 'ᚹ', name: 'Wunjo' },
+
+  { id: 'hagalaz', char: 'ᚺ', name: 'Hagalaz' },
+
+  { id: 'nauthiz', char: 'ᚾ', name: 'Nauthiz' },
+
+  { id: 'isa', char: 'ᛁ', name: 'Isa' },
+
+  { id: 'jera', char: 'ᛃ', name: 'Jera' },
+
+];
+
+
+#scr/constants/quotes.ts
+
+
+export const WORLD_QUOTES = [
+
+  "Мир теней поглотил вас: здесь время течет вспять, а камни шепчут о забытых королях.",
+
+  "Вы оказались в Эфирных Пределах. Ваша душа стала легкой, как утренний туман над священным озером.",
+
+  "Жар Подземного Пламени окружает вас. Каждое ваше движение теперь выковано в горниле судьбы.",
+
+  "Ледяные Пустоши приняли нового странника. Ваше сердце теперь бьется в ритме вечной мерзлоты.",
+
+  "Изумрудные Глубины леса скрыли ваши следы. Вы стали частью великого древа жизни.",
+
+  "Золотые Чертоги открыли свои врата. Слава и безумие теперь ваши вечные спутники.",
+
+  "Бездна Хаоса разверзлась перед вами. Ваши мысли обретают плоть в этом нестабильном пространстве.",
+
+  "Мир Грез приветствует вас. Здесь границы реальности размыты, а каждое желание — закон.",
+
+  "Стальной Град ждет своего мастера. Механизмы судьбы вращаются в унисон с вашим дыханием.",
+
+  "Багряные Закаты вечности — теперь ваш дом. Время остановилось в моменте последнего прощания.",
+
+  "Кристальные Поля раскинулись до горизонта. Ваши глаза теперь видят свет за пределами видимого спектра.",
+
+  "Пустота между мирами стала вашей обителью. Вы — наблюдатель, не ведающий ни жизни, ни смерти."
+
+];
+
+
+#src/App.tsx
+
+
+import React, { useState, useEffect } from 'react';
+
+import GameBoard from './components/GameBoard';
+
+import Dice from './components/Dice';
+
+import { RUNES, Rune } from './constants/runes';
+
+import { GameStage, GameState, PlayerColor } from './types';
+
+import { motion, AnimatePresence } from 'motion/react';
+
+import { Bird } from 'lucide-react';
+
+import { WORLD_QUOTES } from './constants/quotes';
+
+
+
+const SHUFFLED_OUTER = [...RUNES].sort(() => 0.5 - Math.random());
+
+const SHUFFLED_INNER = [...RUNES].sort(() => 0.5 - Math.random());
+
+const MIDDLE_PAIRS = Array.from({ length: 12 }, (_, i) => [
+
+  RUNES[i % 12],
+
+  RUNES[(i + 7) % 12],
+
+]);
+
+
+
+export default function App() {
+
+  const [state, setState] = useState<GameState>({
+
+    stage: GameStage.Setup,
+
+    playerColor: null,
+
+    turn: 'black',
+
+    outerChips: Array(12).fill(null),
+
+    innerChips: Array(12).fill(null),
+
+    middleChips: Array(12).fill(null),
+
+    lastRoll: { player: [], ai: [] },
+
+    isRolling: false,
+
+    message: 'Добро пожаловать в Древние Руны. Выберите свой путь.',
+
+    failedRolls: { black: 0, white: 0 }
+
+  });
+
+
+
+  const [endQuote, setEndQuote] = useState<string>('');
+
+
+
+  const aiColor: PlayerColor | null = state.playerColor === 'black' ? 'white' : 'black';
+
+
+
+  const selectColor = (color: PlayerColor) => {
+
+    setState(prev => ({
+
+      ...prev,
+
+      playerColor: color,
+
+      stage: GameStage.Round1,
+
+      message: 'Раунд 1: Бросайте кости, чтобы занять руны!'
+
+    }));
+
+  };
+
+
+
+  const rollDiceRound1 = () => {
+
+    if (state.isRolling) return;
+
+    setState(prev => ({ ...prev, isRolling: true }));
+
+
+
+    setTimeout(() => {
+
+      let playerRune: Rune, aiRune: Rune;
+
+      const getValidRoll = (color: PlayerColor) => {
+
+        const ring = color === 'black' ? state.outerChips : state.innerChips;
+
+        const ringRunes = color === 'black' ? SHUFFLED_OUTER : SHUFFLED_INNER;
+
+        const available = RUNES.filter(r => {
+
+          const index = ringRunes.findIndex(br => br.id === r.id);
+
+          return ring[index] === null;
+
+        });
+
+        return available[Math.floor(Math.random() * available.length)];
+
+      };
+
+
+
+      playerRune = getValidRoll(state.playerColor!);
+
+      aiRune = getValidRoll(aiColor!);
+
+
+
+      const newOuter = [...state.outerChips];
+
+      const newInner = [...state.innerChips];
+
+
+
+      const pIndex = (state.playerColor === 'black' ? SHUFFLED_OUTER : SHUFFLED_INNER).findIndex(r => r.id === playerRune.id);
+
+      if (state.playerColor === 'black') newOuter[pIndex] = 'black';
+
+      else newInner[pIndex] = 'white';
+
+
+
+      const aIndex = (aiColor === 'black' ? SHUFFLED_OUTER : SHUFFLED_INNER).findIndex(r => r.id === aiRune.id);
+
+      if (aiColor === 'black') newOuter[aIndex] = 'black';
+
+      else newInner[aIndex] = 'white';
+
+
+
+      const isRound1Finished = newOuter.every(c => c !== null) && newInner.every(c => c !== null);
+
+
+
+      setState(prev => ({
+
+        ...prev,
+
+        isRolling: false,
+
+        outerChips: newOuter,
+
+        innerChips: newInner,
+
+        lastRoll: { player: [playerRune], ai: [aiRune] },
+
+        stage: isRound1Finished ? GameStage.Round2 : GameStage.Round1,
+
+        message: isRound1Finished ? 'Раунд 2: Собирайте пары на среднем кольце!' : 'Руна занята. Бросайте снова.',
+
+        turn: 'black'
+
+      }));
+
+    }, 800);
+
+  };
+
+
+
+  const rollDiceRound2 = () => {
+
+    if (state.isRolling || state.stage !== GameStage.Round2) return;
+
+    setState(prev => ({ ...prev, isRolling: true }));
+
+
+
+    setTimeout(() => {
+
+      const r1 = RUNES[Math.floor(Math.random() * 12)];
+
+      const r2 = RUNES[Math.floor(Math.random() * 12)];
+
+      const currentPlayer = state.turn;
+
+      
+
+      let middleIndex = MIDDLE_PAIRS.findIndex(pair => 
+
+        (pair[0].id === r1.id && pair[1].id === r2.id) || 
+
+        (pair[0].id === r2.id && pair[1].id === r1.id)
+
+      );
+
+
+
+      const nextOuter = [...state.outerChips];
+
+      const nextInner = [...state.innerChips];
+
+      const nextMiddle = [...state.middleChips];
+
+      let finalRoll = [r1, r2];
+
+      let finalMiddleIndex = middleIndex;
+
+      const currentFailed = state.failedRolls[currentPlayer];
+
+
+
+      if ((middleIndex === -1 || nextMiddle[middleIndex] !== null) && currentFailed >= 3) {
+
+        const availableIndices = nextMiddle.map((c, i) => c === null ? i : -1).filter(i => i !== -1);
+
+        if (availableIndices.length > 0) {
+
+          finalMiddleIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+
+          finalRoll = MIDDLE_PAIRS[finalMiddleIndex];
+
         }
 
-    body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #111 url("images/background.png") center/cover fixed no-repeat;
-        color: #eee;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-    }
-    
-    /* Фон во время финала (можно настроить под себя) */
-    body.ending-mode {
-        background: #000; /* или другой цвет/градиент, если захочешь */
-    }
+      }
 
-    h1 {
-        margin-bottom: 10px;
-        text-align: center;
-    }
 
-    #rollBtn {
-    display: none;
-    }
 
-    #boardScale {
-        transform: scale(0.75);
-        transform-origin: center center;
-        opacity: 0;
-        animation: boardIntro 5s ease-out forwards;
-    }
+      let newMessage = `${currentPlayer === state.playerColor ? 'Вы' : 'ИИ'} выбросили ${finalRoll[0].char}${finalRoll[1].char}. `;
 
-/* Плавное появление доски при загрузке */
-    @keyframes boardIntro {
-        from {
-            transform: scale(0) translateY(60px);
-            opacity: 0;
-        }
-        to {
-            transform: scale(0.85) translateY(0);
-            opacity: 1;
-        }
-    }
+      let success = false;
 
 
-    #controls, #messages, #diceArea {
-        margin-top: 15px;
-        text-align: center;
-        max-width: 600px;
-    }
 
-    button {
-        padding: 10px 18px;
-        margin: 5px;
-        font-size: 16px;
-        cursor: pointer;
-        border-radius: 6px;
-        border: none;
-        background: #444;
-        color: #fff;
-    }
+      if (finalMiddleIndex !== -1 && nextMiddle[finalMiddleIndex] === null) {
 
-    button:disabled {
-        opacity: 0.5;
-        cursor: default;
-    }
+        const myRing = currentPlayer === 'black' ? nextOuter : nextInner;
 
-    /* ==== ДОСКА ==== */
+        let nearestIdx = -1;
 
-    #boardWrapper {
-        position: relative;
-        margin-top: 20;
-    }
-    
-    /* Красно-золотое сияние за доской */
-    #boardWrapper::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 520px;
-        height: 520px;
-        transform: translate(-50%, -50%);
-        border-radius: 50%;
-        background: radial-gradient(
-            circle,
-            rgba(255, 235, 170, 0.7) 0%,
-            rgba(230, 90, 40, 0.8) 35%,
-            transparent 70%
-        );
-        filter: blur(18px);
-        z-index: -1;
-    }
+        let minDist = 13;
 
-
-    .board {
-        position: relative;
-        width: 580px;
-        height: 580px;
-        border-radius: 50%;
-        background: #4b1f14; /* тёмно-красно-коричневый как на фото */
-        border: 14px solid #b0b0b0; /* серая внешняя кайма */
-        box-shadow: 0 0 20px rgba(0,0,0,0.7);
-        overflow: hidden; /* режем линии по кругу */
-    }
-    /* Подстройка фишек ТОЛЬКО на внутреннем кольце */
-    .inner-seg.token-white::after,
-    .inner-seg.token-black::after {
-    right: +7px;    /* было -6px → двигаем ближе к центру */
-    bottom: +11px;   /* было -6px → поднимаем ближе к центру */
-    }
-
-    .ring {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        border-radius: 50%;
-        pointer-events: none;
-    }
-
-    /* Границы колец, чтобы повторить разлиновку */
-    .outer-ring {
-        width: 100%;
-        height: 100%;
-        border: 2px solid rgba(180, 60, 60, 0.8);
-    }
-
-    .middle-ring {
-        width: 70%;
-        height: 70%;
-        border: 2px solid rgba(180, 60, 60, 0.8);
-    }
-
-    .inner-ring {
-        width: 40%;
-        height: 40%;
-        border: 2px solid rgba(180, 60, 60, 0.8);
-    }
-
-    /* РАДИАЛЬНЫЕ ЛИНИИ (делим на 12 сегментов) */
-
-    #radialLines {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-    }
-
-    .radial-line {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 2px;
-        height: 580px; /* полный диаметр — линия от края до края */
-        background: rgba(180, 60, 60, 0.8);
-        transform-origin: 50% 50%; /* крутим вокруг центра */
-    }
-
-    /* СЕГМЕНТЫ-СИМВОЛЫ (только символ, без подложки) */
-
-    .segment {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 40px;
-        height: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 22px;
-        color: #e0d0c0;
-        background: transparent;
-        border: none;
-        box-sizing: border-box;
-        pointer-events: none;
-        text-shadow: 0 0 3px rgba(0,0,0,0.8);
-        transform: translate(-50%, -50%); /* базовое центрирование, дальше дополним в JS */
-    }
-
-    .outer-seg { /* радиус для внешнего кольца */ }
-    .middle-seg { /* radius middle */ }
-    .inner-seg { /* radius inner */ }
-
-    .segment span.symbol-text {
-        pointer-events: none;
-    }
-
-    /* ФИШКИ */
-
-    .token-white::after,
-    .token-black::after {
-        content: "";
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        border: 2px solid #000;
-        box-shadow: 0 0 5px rgba(0,0,0,0.6);
-        right: -6px;
-        bottom: -6px;
-    }
-
-    .token-white::after {
-        background: #f5f5f5;
-    }
-
-    .token-black::after {
-        background: #111;
-    }
-
-    /* ЦЕНТРАЛЬНЫЙ ЛОГОТИП */
-
-    .logo {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 120px;
-        height: 120px;
-        transform: translate(-50%, -50%);
-        border-radius: 50%;
-        background: url("images/kingfisher.png") center/contain no-repeat;
-        box-shadow: 0 0 10px rgba(0,0,0,0.7);
-        pointer-events: none;
-    }
-
-
-    /* АНИМАЦИЯ В КОНЦЕ ИГРЫ */
-
-    .board-animate {
-        animation: boardMove 1.8s ease-in-out forwards;
-    }
-
-    @keyframes boardMove {
-        0%   { transform: translateY(0) scale(1) rotate(0deg); opacity: 1; }
-        25%  { transform: translateY(-10px) scale(1.05) rotate(3deg); }
-        50%  { transform: translateY(5px) scale(0.95) rotate(-3deg); }
-        75%  { transform: translateY(-15px) scale(1.08) rotate(2deg); }
-        100% { transform: translateY(-80px) scale(0.1) rotate(20deg); opacity: 0; }
-    }
-    /* АНИМАЦИЯ КОСТЕЙ */
-
-    #diceArea {
-        margin-top: 15px;
-    }
-    
-    .dice-row {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        margin: 4px 0;
-    }
-    
-    .dice-label {
-        min-width: 150px;
-        text-align: right;
-        font-weight: 600;
-    }
-    
-    .dice-container {
-        display: flex;
-        gap: 8px;
-    }
-    
-    .die {
-        width:  calc(40px * var(--dice-scale));
-        height: calc(40px * var(--dice-scale));
-        border-radius: 8px;
-        background: #f5f5f5;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: calc(24px * var(--dice-scale));
-        color: #222;
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-    }
-
-    
-    .die-secondary {
-       display: none; /* во втором раунде сделаем её активной */
-    }
-    
-    .die.rolling {
-        animation: dieRoll 0.5s linear;
-    }
-    
-    @keyframes dieRoll {
-        0%   { transform: rotate(0deg)   scale(1);   }
-        25%  { transform: rotate(90deg)  scale(1.1); }
-        50%  { transform: rotate(180deg) scale(0.9); }
-        75%  { transform: rotate(270deg) scale(1.05);}
-        100% { transform: rotate(360deg) scale(1);   }
-    }
-    
-    .dice-hint {
-        margin-top: 6px;
-        font-size: 13px;
-        opacity: 0.8;
-    }
-        
-    /* ЗОНА КОНЦОВОК */
-
-    #endingArea {
-        margin-top: 30px;
-        text-align: center;
-        max-width: 600px;
-        display: none;
-    }
-    
-    /* контейнер для картинки и текста */
-    #endingImageWrapper {
-        position: relative;
-        display: inline-block;
-        max-width: 100%;
-    }
-    
-    /* сама картинка финала */
-    #endingImage {
-        display: block;
-        max-width: 100%;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(0,0,0,0.8);
-    }
-    
-    /* текст поверх нижней части картинки */
-    #endingText {
-        position: absolute;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        padding: 14px 18px;
-        background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
-        color: #f5f5f5;
-        font-size: 16px;
-        line-height: 1.4;
-        text-align: left; /* можно поменять на center, если хочешь */
-        border-radius: 0 0 12px 12px;
-        box-sizing: border-box;
-    }
-
-
-    #diceArea {
-        font-size: 18px;
-        line-height: 1.5;
-    }
-</style>
-</head>
-<body>
-
-<h1>КРУГОЯВЬ</h1>
-
-<div id="controls">
-    <div id="colorChoice">
-        Выбери цвет фишек:<br />
-        <button id="playWhiteBtn">БЕЛЫЕ</button>
-        <button id="playBlackBtn">ЧЕРНЫЕ</button>
-    </div>
-    <div id="rollControls" style="display:none;">
-        <button id="rollBtn">Бросить кубики</button>
-    </div>
-</div>
-
-<div id="messages"></div>
-
-<!-- ВЕРХ: твой бросок -->
-<div id="playerDiceArea">
-    <div class="dice-row">
-        <div class="dice-label">Твой бросок:</div>
-        <div class="dice-container">
-            <div id="playerDie1" class="die"></div>
-            <div id="playerDie2" class="die die-secondary"></div>
-        </div>
-    </div>
-    <div class="dice-hint">Нажми на кость для броска.</div>
-</div>
-
-<!-- СЕРЕДИНА: доска -->
-<div id="boardWrapper">
-    <div id="boardScale">
-        <div id="board" class="board">
-
-            <!-- радиальные линии (деление на 12 секторов) -->
-            <div id="radialLines"></div>
-
-            <!-- кольца с символами -->
-            <div id="outerRing" class="ring outer-ring"></div>
-            <div id="middleRing" class="ring middle-ring"></div>
-            <div id="innerRing" class="ring inner-ring"></div>
-
-            <div class="logo"></div>
-
-        </div>
-    </div>
-</div>
-
-
-<!-- НИЗ: бросок компьютера -->
-<div id="computerDiceArea">
-    <div class="dice-row">
-        <div class="dice-label">Бросок компьютера:</div>
-        <div class="dice-container">
-            <div id="computerDie1" class="die"></div>
-            <div id="computerDie2" class="die die-secondary"></div>
-        </div>
-    </div>
-</div>
-
-<div id="endingArea">
-    <div id="endingImageWrapper">
-        <img id="endingImage" src="" alt="ending" />
-        <div id="endingText"></div>
-    </div>
-</div>
-
-
-<script>
-    /* ================================
-       КОНСТАНТЫ И НАСТРОЙКИ
-       ================================ */
-
-    // 6 символов — пока примерные, сюда потом вставишь свои
-    const SYMBOLS = ["ᚯ", "ᛁ", "ᛉ", "ᛋ", "ᚻ", "ᚫ"];
-
- const RING_SYMBOL_INDEXES = [0,1,2,3,4,5,0,1,2,3,4,5];
-
-    const MIDDLE_PAIRS = [
-        [0,1],
-        [2,3],
-        [4,5],
-        [0,2],
-        [1,3],
-        [2,4],
-        [3,5],
-        [0,5],
-        [1,4],
-        [0,3],
-        [1,5],
-        [2,5]
-    ];
-
-    const FOREST_ENDING = {
-        image: "images/forest.png",
-        text: "Поздравляем. Вы попали в Лес."
-    };
-
-    const RANDOM_ENDINGS = [
-        { image: "images/ending1.png" },
-        { image: "images/ending2.png" },
-        { image: "images/ending3.png" },
-        { image: "images/ending4.png" },
-        { image: "images/ending5.png" }
-    ];
-
-    /* ================================
-       СОСТОЯНИЕ ИГРЫ
-       ================================ */
-    function hideUiForEnding() {
-        const controls = document.getElementById("controls");
-        const messages = document.getElementById("messages");
-        const playerDiceArea = document.getElementById("playerDiceArea");
-        const computerDiceArea = document.getElementById("computerDiceArea");
-    
-        if (controls) controls.style.display = "none";
-        if (messages) messages.style.display = "none";
-        if (playerDiceArea) playerDiceArea.style.display = "none";
-        if (computerDiceArea) computerDiceArea.style.display = "none";
-    }
-
-    let phase = "chooseColor";
-    let playerColor = null;
-    let computerColor = null;
-
-    let outerRing = [];
-    let innerRing = [];
-    let middleRing = [];
-
-    let outerSegElems = [];
-    let innerSegElems = [];
-    let middleSegElems = [];
-
-    const outerRingElem = document.getElementById("outerRing");
-    const middleRingElem = document.getElementById("middleRing");
-    const innerRingElem  = document.getElementById("innerRing");
-    const boardElem      = document.getElementById("board");
-    const radialLinesElem = document.getElementById("radialLines");
-
-    /* ================================
-       УТИЛИТЫ
-       ================================ */
-
-    function randomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    function setMessage(text) {
-        document.getElementById("messages").innerHTML = text;
-    }
-
-    function updateDiceDisplay(playerText, computerText) {
-        document.getElementById("playerDiceText").textContent   = playerText;
-        document.getElementById("computerDiceText").textContent = computerText;
-    }
-
-    function ringFull(ringArray) {
-        return ringArray.every(cell => cell.token !== null);
-    }
-
-    function middleFull() {
-        return middleRing.every(cell => cell.token !== null);
-    }
-
-    /* ================================
-       СЕТКА (РАДИАЛЫ + СЕГМЕНТЫ)
-       ================================ */
-
-    function createRadialLines() {
         for (let i = 0; i < 12; i++) {
-            const line = document.createElement("div");
-            line.className = "radial-line";
-            line.style.transform = `translate(-50%, -50%) rotate(${i * 30}deg)`;
-            radialLinesElem.appendChild(line);
-        }
-    }
 
-    function createRingSegments() {
-        const outerRadius = 250;
-        const middleRadius = 160;
-        const innerRadius = 85;
+          if (myRing[i] === currentPlayer) {
 
-        const angleOffset = -15;
-        
-        for (let i = 0; i < 12; i++) {
-            const angle = i * 30 + angleOffset; // градусов
-            const symbolIndex = RING_SYMBOL_INDEXES[i];
+            const dist = Math.min(Math.abs(i - finalMiddleIndex), 12 - Math.abs(i - finalMiddleIndex));
 
-            // ВНЕШНЕЕ КОЛЬЦО
-            const outerSeg = document.createElement("div");
-            outerSeg.className = "segment outer-seg";
-            outerSeg.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${outerRadius}px)`;
-            const outerLabel = document.createElement("span");
-            outerLabel.className = "symbol-text";
-            outerLabel.textContent = SYMBOLS[symbolIndex];
-            outerSeg.appendChild(outerLabel);
-            outerRingElem.appendChild(outerSeg);
+            if (dist < minDist) {
 
-            outerRing.push({ symbolIndex, token: null });
-            outerSegElems.push(outerSeg);
+              minDist = dist;
 
-            // ВНУТРЕННЕЕ КОЛЬЦО
-            const innerSeg = document.createElement("div");
-            innerSeg.className = "segment inner-seg";
-            innerSeg.style.transform = `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${innerRadius}px)`;
-            const innerLabel = document.createElement("span");
-            innerLabel.className = "symbol-text";
-            innerLabel.textContent = SYMBOLS[symbolIndex];
-            innerSeg.appendChild(innerLabel);
-            innerRingElem.appendChild(innerSeg);
+              nearestIdx = i;
 
-            innerRing.push({ symbolIndex, token: null });
-            innerSegElems.push(innerSeg);
-        }
-
-            // СРЕДНЕЕ КОЛЬЦО: пары символов
-            for (let i = 0; i < 12; i++) {
-            const angle = i * 30 + 15; // <-- поворот на 15° только этого кольца
-            const pair = MIDDLE_PAIRS[i];
-            const midSeg = document.createElement("div");
-            midSeg.className = "segment middle-seg";
-            midSeg.style.transform = 
-                `translate(-50%, -50%) rotate(${angle}deg) translate(0, -${middleRadius}px)`;
-
-            const midLabel = document.createElement("span");
-            midLabel.className = "symbol-text";
-            midLabel.textContent = SYMBOLS[pair[0]] + " " + SYMBOLS[pair[1]];
-            midSeg.appendChild(midLabel);
-            middleRingElem.appendChild(midSeg);
-
-            middleRing.push({ pair: pair.slice(), token: null });
-            middleSegElems.push(midSeg);
-        }
-    }
-
-    createRadialLines();
-    createRingSegments();
-
-    /* ================================
-       РАЗМЕЩЕНИЕ ФИШЕК (РАУНД 1)
-       ================================ */
-
-    function placeTokenOnRing(color, symbolIndex) {
-        const ringArray   = color === "white" ? innerRing    : outerRing;
-        const segElements = color === "white" ? innerSegElems : outerSegElems;
-
-        for (let i = 0; i < ringArray.length; i++) {
-            const cell = ringArray[i];
-            if (cell.symbolIndex === symbolIndex && cell.token === null) {
-                cell.token = color;
-                segElements[i].classList.add(color === "white" ? "token-white" : "token-black");
-                return true;
             }
+
+          }
+
         }
-        return false;
-    }
 
-    /* ================================
-       ПЕРВЫЙ РАУНД
-       ================================ */
-        // ссылки на DOM-элементы костей
-    const playerDie1    = document.getElementById("playerDie1");
-    const playerDie2    = document.getElementById("playerDie2");
-    const computerDie1  = document.getElementById("computerDie1");
-    const computerDie2  = document.getElementById("computerDie2");
-    
-    // установить символ на грань кости
-    function setDieSymbol(dieElem, symbolIndex) {
-        dieElem.textContent = SYMBOLS[symbolIndex];
-    }
-    
-    // анимация броска: кость крутится и останавливается на нужном символе
-    function animateDie(dieElem, symbolIndex) {
-        dieElem.classList.add("rolling");
-        // во время анимации можно показывать рандом, но достаточно просто финала
-        setTimeout(() => {
-            setDieSymbol(dieElem, symbolIndex);
-            dieElem.classList.remove("rolling");
-        }, 450);
-    }
-    
-    function handleRound1Roll() {
-        const playerSymIndex   = randomInt(0, SYMBOLS.length - 1);
-        const computerSymIndex = randomInt(0, SYMBOLS.length - 1);
 
-        const playerSym   = SYMBOLS[playerSymIndex];
-        const computerSym = SYMBOLS[computerSymIndex];
 
-        animateDie(playerDie1, playerSymIndex);
-        animateDie(computerDie1, computerSymIndex);
+        if (nearestIdx !== -1) {
 
-        const playerPlaced   = placeTokenOnRing(playerColor,   playerSymIndex);
-        const computerPlaced = placeTokenOnRing(computerColor, computerSymIndex);
+          myRing[nearestIdx] = null;
 
-        let msg = `<b>Первый раунд.</b><br>
-                   Ты бросил: ${playerSym} (${playerPlaced ? "фишка поставлена" : "подходящих полей нет"})<br>
-                   Компьютер бросил: ${computerSym} (${computerPlaced ? "фишка поставлена" : "подходящих полей нет"})`;
+          nextMiddle[finalMiddleIndex] = currentPlayer;
 
-        const outerIsFull = ringFull(outerRing);
-        const innerIsFull = ringFull(innerRing);
+          newMessage += `Успех! Фишка перемещена.`;
 
-        if (outerIsFull && innerIsFull) {
-            phase = "round2";
-            setMessage(msg + `<br><br><b>Оба кольца заполнены. Начинается второй раунд.</b><br>Теперь ходы закрывают пары на среднем кольце, фишки переносятся с твоего кольца.`);
+          success = true;
+
         } else {
-            setMessage(msg + `<br><br>Продолжай бросать, пока оба кольца не будут полностью заполнены.`);
+
+          newMessage += `Нет фишек для перемещения.`;
+
         }
+
+      } else {
+
+        newMessage += `Нет подходящей пары. Ход переходит.`;
+
+      }
+
+
+
+      const isFinished = nextMiddle.every(c => c !== null);
+
+      if (isFinished) {
+
+        setEndQuote(WORLD_QUOTES[Math.floor(Math.random() * WORLD_QUOTES.length)]);
+
+      }
+
+
+
+      setState(prev => ({
+
+        ...prev,
+
+        isRolling: false,
+
+        outerChips: nextOuter,
+
+        innerChips: nextInner,
+
+        middleChips: nextMiddle,
+
+        failedRolls: {
+
+          ...prev.failedRolls,
+
+          [currentPlayer]: success ? prev.failedRolls[currentPlayer] : prev.failedRolls[currentPlayer] + 1
+
+        },
+
+        lastRoll: { 
+
+          player: currentPlayer === state.playerColor ? finalRoll : prev.lastRoll.player,
+
+          ai: currentPlayer === aiColor ? finalRoll : prev.lastRoll.ai
+
+        },
+
+        turn: currentPlayer === 'black' ? 'white' : 'black',
+
+        message: newMessage,
+
+        stage: isFinished ? GameStage.Finished : GameStage.Round2
+
+      }));
+
+    }, 800);
+
+  };
+
+
+
+  useEffect(() => {
+
+    if (state.stage === GameStage.Round2 && state.turn === aiColor && !state.isRolling) {
+
+      const timer = setTimeout(() => rollDiceRound2(), 1500);
+
+      return () => clearTimeout(timer);
+
     }
 
-    /* ================================
-       ПЕРЕНОС ФИШКИ НА СРЕДНЕЕ КОЛЬЦО (РАУНД 2)
-       ================================ */
-
-    function removeOneTokenFromRing(color) {
-        const ringArray   = color === "white" ? innerRing    : outerRing;
-        const segElements = color === "white" ? innerSegElems : outerSegElems;
-
-        for (let i = 0; i < ringArray.length; i++) {
-            const cell = ringArray[i];
-            if (cell.token === color) {
-                cell.token = null;
-                segElements[i].classList.remove(color === "white" ? "token-white" : "token-black");
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function placeTokenOnMiddle(color, s1Index, s2Index) {
-        const a = s1Index;
-        const b = s2Index;
-
-        for (let i = 0; i < middleRing.length; i++) {
-            const cell = middleRing[i];
-            if (cell.token !== null) continue;
-
-            const p0 = cell.pair[0];
-            const p1 = cell.pair[1];
-
-            const match = (p0 === a && p1 === b) || (p0 === b && p1 === a);
-            if (match) {
-                const removed = removeOneTokenFromRing(color);
-                if (!removed) {
-                    return { success: false, reason: "no_tokens_on_ring" };
-                }
-                cell.token = color;
-                middleSegElems[i].classList.add(color === "white" ? "token-white" : "token-black");
-                return { success: true, index: i };
-            }
-        }
-        return { success: false, reason: "no_such_pair_or_already_closed" };
-    }
-
-    /* ================================
-       ВТОРОЙ РАУНД
-       ================================ */
-
-    function handleRound2Roll() {
-        if (phase !== "round2") return;
-    
-        // --- ХОД ИГРОКА ---
-    
-        const p1 = randomInt(0, SYMBOLS.length - 1);
-        const p2 = randomInt(0, SYMBOLS.length - 1);
-    
-        // крутим кости игрока
-        animateDie(playerDie1, p1);
-        animateDie(playerDie2, p2);
-        playerDie2.classList.remove("die-secondary");
-    
-        const playerText = SYMBOLS[p1] + " + " + SYMBOLS[p2];
-    
-        let log = `<b>Второй раунд.</b><br>Твой бросок: ${playerText}`;
-    
-        const resultPlayer = placeTokenOnMiddle(playerColor, p1, p2);
-        if (resultPlayer.success) {
-            log += `<br>Комбинация найдена на среднем кольце — твоя фишка перенесена.`;
-        } else {
-            log += `<br>Подходящей незакрытой комбинации нет — ход переходит компьютеру.`;
-        }
-    
-        setMessage(log);
-    
-        if (middleFull()) {
-            finishGame();
-            return;
-        }
-    
-        // --- ХОД КОМПЬЮТЕРА С ЗАДЕРЖКОЙ ---
-    
-        setTimeout(() => {
-            const c1 = randomInt(0, SYMBOLS.length - 1);
-            const c2 = randomInt(0, SYMBOLS.length - 1);
-    
-            // крутим кости компьютера
-            animateDie(computerDie1, c1);
-            animateDie(computerDie2, c2);
-            computerDie2.classList.remove("die-secondary");
-    
-            const compText = SYMBOLS[c1] + " + " + SYMBOLS[c2];
-    
-            let log2 = document.getElementById("messages").innerHTML;
-            log2 += `<br><br>Ход компьютера: ${compText}`;
-    
-            const resultComp = placeTokenOnMiddle(computerColor, c1, c2);
-            if (resultComp.success) {
-                log2 += `<br>Комбинация найдена — фишка компьютера перенесена.`;
-            } else {
-                log2 += `<br>Для компьютера тоже нет доступной комбинации. Ход возвращается тебе.`;
-            }
-    
-            setMessage(log2);
-    
-            if (middleFull()) {
-                finishGame();
-                return;
-            }
-        }, 600);
-    }
+  }, [state.stage, state.turn, state.isRolling]);
 
 
-    /* ================================
-       ЗАВЕРШЕНИЕ ИГРЫ
-       ================================ */
 
-    function finishGame() {
-        phase = "finished";
-        document.getElementById("rollBtn").disabled = true;
+  return (
 
-        let whiteCount = 0;
-        let blackCount = 0;
-        for (const cell of middleRing) {
-            if (cell.token === "white") whiteCount++;
-            if (cell.token === "black") blackCount++;
-        }
+    <div className="min-h-screen bg-[#1a0a05] flex flex-col items-center justify-center font-serif text-stone-200 p-4">
 
-        hideUiForEnding();
+      <header className="mb-6 text-center">
 
-        boardElem.classList.add("board-animate");
-        setMessage(`<b>Все сегменты среднего кольца закрыты.</b><br>Белых фишек: ${whiteCount}, чёрных фишек: ${blackCount}.<br>Доска уходит — дальше тебя ждёт видение.`);
+        <h1 className="text-4xl font-extrabold tracking-widest uppercase text-[#d4af37] drop-shadow-lg">
 
-        setTimeout(() => {
-            boardElem.style.display = "none";
-            showEnding(whiteCount, blackCount);
-        }, 1900);
-    }
+          Древние Руны
 
-    function showEnding(whiteCount, blackCount) {
-        document.body.classList.add("ending-mode");  //  ← вот эта строка
-        
-        const endingArea = document.getElementById("endingArea");
-        const imgEl = document.getElementById("endingImage");
-        const textEl = document.getElementById("endingText");
-        endingArea.style.display = "block";
-    
-        // ЛЕС: показываем картинку и текст, ждём КЛИК
-        function showForestOnly() {
-            imgEl.src = FOREST_ENDING.image;
-            textEl.textContent = "бла бла бла лес";
-    
-            // делаем картинку кликабельной
-            imgEl.style.cursor = "pointer";
-            imgEl.onclick = () => {
-                // при клике — переходим к рандомной концовке
-                const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
-                imgEl.src = random.image;
-                textEl.textContent = random.text;
-    
-                // убираем кликабельность после перехода
-                imgEl.onclick = null;
-                imgEl.style.cursor = "default";
-            };
-        }
-    
-        // Обычный рандомный финал (без Леса)
-        function showRandomOnly() {
-            imgEl.style.cursor = "default";
-            imgEl.onclick = null;
-    
-            const random = RANDOM_ENDINGS[Math.floor(Math.random() * RANDOM_ENDINGS.length)];
-            imgEl.src = random.image;
-            textEl.textContent = random.text;
-        }
-    
-        if (whiteCount === blackCount) {
-            // НИЧЬЯ → только Лес, затем по клику рандом
-            showForestOnly();
-        } else {
-            // Победа/поражение → сразу рандом
-            showRandomOnly();
-        }
-    }
+        </h1>
+
+        <div className="h-6 mt-2">
+
+          <AnimatePresence mode="wait">
+
+             <motion.p key={state.message} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="text-stone-400 italic text-sm">
+
+                {state.message}
+
+             </motion.p>
+
+          </AnimatePresence>
+
+        </div>
+
+      </header>
 
 
-    /* ================================
-       ВЫБОР ЦВЕТА / НАЧАЛО
-       ================================ */
 
-    document.getElementById("playWhiteBtn").addEventListener("click", () => {
-        if (phase !== "chooseColor") return;
-        playerColor = "white";
-        computerColor = "black";
-        phase = "round1";
-        document.getElementById("colorChoice").style.display = "none";
-        document.getElementById("rollControls").style.display = "block";
-        setMessage(`Ты играешь <b>белыми</b> (внутреннее кольцо). Компьютер — чёрными (внешнее кольцо).<br><br>Первый раунд: вы с компьютером бросаете по одному кубику с символами и заполняете свои кольца.`);
-    });
+      <AnimatePresence>
 
-    document.getElementById("playBlackBtn").addEventListener("click", () => {
-        if (phase !== "chooseColor") return;
-        playerColor = "black";
-        computerColor = "white";
-        phase = "round1";
-        document.getElementById("colorChoice").style.display = "none";
-        document.getElementById("rollControls").style.display = "block";
-        setMessage(`Ты играешь <b>чёрными</b> (внешнее кольцо). Компьютер — белыми (внутреннее кольцо).<br><br>Первый раунд: вы с компьютером бросаете по одному кубику с символами и заполняете свои кольца.`);
-    });
+        {state.stage === GameStage.Finished && (
 
-    function userRoll() {
-        if (phase === "round1") {
-            handleRound1Roll();
-        } else if (phase === "round2") {
-            handleRound2Roll();
-        }
-    }
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 2, delay: 0.5 }} className="fixed inset-0 z-[100] bg-amber-500/30 backdrop-blur-sm pointer-events-none" />
 
-document.getElementById("rollBtn").addEventListener("click", userRoll);
-playerDie1.addEventListener("click", userRoll);
+        )}
+
+        {state.stage === GameStage.Finished && (
+
+          <motion.div initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 1.5, delay: 1.5 }} className="fixed inset-0 z-[110] flex flex-col items-center justify-center p-8 text-center bg-[#1a0a05]/95 overflow-y-auto">
+
+            <div className="max-w-xl w-full flex flex-col items-center">
+
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} className="mb-8 opacity-40 text-amber-500"><Bird size={80} strokeWidth={1} /></motion.div>
+
+              <motion.h2 initial={{ letterSpacing: "0.1em", opacity: 0 }} animate={{ letterSpacing: "0.4em", opacity: 1 }} transition={{ duration: 2, delay: 2 }} className="text-4xl font-bold text-amber-500 mb-8 uppercase font-serif drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">Мир Изменился</motion.h2>
+
+              <div className="relative p-8 border-y border-amber-600/30">
+
+                <p className="text-xl md:text-2xl text-stone-200 italic leading-relaxed font-serif">"{endQuote}"</p>
+
+              </div>
+
+              <button onClick={() => window.location.reload()} className="mt-12 px-10 py-4 bg-amber-800/20 hover:bg-amber-700/40 text-amber-500 rounded-full font-bold uppercase tracking-widest border border-amber-600/50 transition-all active:scale-95 cursor-pointer">Начать заново</button>
+
+            </div>
+
+          </motion.div>
+
+        )}
+
+      </AnimatePresence>
 
 
-    setMessage("Добро пожаловать. Сначала выбери цвет фишек, чтобы начать игру.");
-</script>
 
-</body>
-</html>
+      <div className="flex flex-col lg:flex-row gap-8 items-center justify-center">
+
+        <aside className="hidden lg:flex flex-col gap-4 w-48 text-right">
+
+          <div className="p-4 bg-stone-900/40 rounded-2xl border-r-2 border-white/10">
+
+            <h3 className="text-stone-500 uppercase text-[10px] tracking-widest mb-4">ИИ (Белые)</h3>
+
+            <div className="flex flex-wrap gap-2 justify-end">
+
+              {Array.from({ length: 12 - (state.innerChips.filter(c => c === 'white').length + state.middleChips.filter(c => c === 'white').length) }).map((_, i) => (
+
+                <div key={i} className="w-4 h-4 rounded-full bg-stone-200 shadow-sm opacity-50" />
+
+              ))}
+
+            </div>
+
+            <p className="mt-4 text-2xl font-bold text-stone-300">{12 - (state.innerChips.filter(c => c === 'white').length + state.middleChips.filter(c => c === 'white').length)}</p>
+
+            <span className="text-[10px] text-stone-600 uppercase tracking-tighter">Осталось фишек</span>
+
+          </div>
+
+        </aside>
+
+
+
+        <main className="flex flex-col gap-8 items-center">
+
+          <div className="flex flex-col lg:flex-row gap-8 items-center justify-center">
+
+             <div className="flex flex-col gap-6 w-64 items-center order-2 lg:order-1">
+
+                {state.stage === GameStage.Setup && (
+
+                  <div className="flex flex-col items-center gap-4 bg-stone-900/50 p-6 rounded-2xl border border-stone-800">
+
+                    <span className="text-xs tracking-widest uppercase text-stone-500">Выберите цвет</span>
+
+                    <div className="flex gap-4">
+
+                      <button onClick={() => selectColor('black')} className="w-12 h-12 rounded-full bg-stone-900 border-2 border-stone-600 hover:scale-110 transition-transform shadow-xl cursor-pointer" />
+
+                      <button onClick={() => selectColor('white')} className="w-12 h-12 rounded-full bg-stone-100 border-2 border-stone-400 hover:scale-110 transition-transform shadow-xl cursor-pointer" />
+
+                    </div>
+
+                  </div>
+
+                )}
+
+                {(state.stage === GameStage.Round1 || state.stage === GameStage.Round2) && (
+
+                  <div className="flex flex-col gap-4 w-full">
+
+                    <div onClick={() => !state.isRolling && state.turn === state.playerColor && (state.stage === GameStage.Round1 ? rollDiceRound1() : rollDiceRound2())} className={`bg-stone-900/30 p-4 rounded-xl border border-stone-800 transition-all ${!state.isRolling && state.turn === state.playerColor ? 'cursor-pointer hover:bg-stone-800/50 hover:border-stone-700' : ''}`}>
+
+                      <div className="flex justify-center gap-2">
+
+                        <Dice label="Игрок" rune={state.lastRoll.player[0] || null} rolling={state.isRolling && (state.stage === GameStage.Round1 || state.turn === state.playerColor)} />
+
+                        {state.stage === GameStage.Round2 && state.lastRoll.player[1] && <Dice label="" rune={state.lastRoll.player[1]} rolling={state.isRolling && state.turn === state.playerColor} />}
+
+                      </div>
+
+                    </div>
+
+                    <div className="bg-stone-900/30 p-4 rounded-xl border border-stone-800 opacity-80">
+
+                      <div className="flex justify-center gap-2">
+
+                        <Dice label="ИИ" rune={state.lastRoll.ai[0] || null} rolling={state.isRolling && (state.stage === GameStage.Round1 || state.turn === aiColor)} />
+
+                        {state.stage === GameStage.Round2 && state.lastRoll.ai[1] && <Dice label="" rune={state.lastRoll.ai[1]} rolling={state.isRolling && state.turn === aiColor} />}
+
+                      </div>
+
+                    </div>
+
+                    <button disabled={state.isRolling || (state.stage === GameStage.Round2 && state.turn !== state.playerColor) || state.stage === GameStage.Finished} onClick={state.stage === GameStage.Round1 ? rollDiceRound1 : rollDiceRound2} className="w-full py-3 bg-[#8b4513] hover:bg-[#a0522d] disabled:bg-stone-800 disabled:text-stone-600 rounded-lg font-bold uppercase tracking-widest text-[#d4af37] shadow-lg border-b-4 border-[#3e1a0d] active:border-b-0 active:translate-y-1 transition-all">
+
+                      {state.stage === GameStage.Round1 ? 'Бросок' : (state.turn === state.playerColor ? 'Ваш ход' : 'ИИ думает')}
+
+                    </button>
+
+                  </div>
+
+                )}
+
+              </div>
+
+              <GameBoard outerChips={state.outerChips} innerChips={state.innerChips} middleChips={state.middleChips} outerRunes={SHUFFLED_OUTER} innerRunes={SHUFFLED_INNER} middlePairs={MIDDLE_PAIRS} isFinished={state.stage === GameStage.Finished} />
+
+          </div>
+
+        </main>
+
+
+
+        <aside className="hidden lg:flex flex-col gap-4 w-48 text-left">
+
+          <div className="p-4 bg-stone-900/40 rounded-2xl border-l-2 border-[#d4af37]/20">
+
+            <h3 className="text-stone-500 uppercase text-[10px] tracking-widest mb-4">Игрок (Черные)</h3>
+
+            <div className="flex flex-wrap gap-2 justify-start">
+
+              {Array.from({ length: 12 - (state.outerChips.filter(c => c === 'black').length + state.middleChips.filter(c => c === 'black').length) }).map((_, i) => (
+
+                <div key={i} className="w-4 h-4 rounded-full bg-stone-900 shadow-sm border border-stone-800 opacity-50" />
+
+              ))}
+
+            </div>
+
+            <p className="mt-4 text-2xl font-bold text-[#d4af37]">{12 - (state.outerChips.filter(c => c === 'black').length + state.middleChips.filter(c => c === 'black').length)}</p>
+
+            <span className="text-[10px] text-stone-600 uppercase tracking-tighter">Осталось фишек</span>
+
+          </div>
+
+        </aside>
+
+      </div>
+
+
+
+      <footer className="mt-8 text-stone-700 text-[10px] tracking-widest uppercase flex gap-4 opacity-50">
+
+        <span>Раунд 1: Сбор</span>
+
+        <span>Раунд 2: Узоры</span>
+
+      </footer>
+
+    </div>
+
+  );
+
+}
+
+
+#src/components/GameBoard.tsx
+
+
+import React from 'react';
+
+import { Bird } from 'lucide-react';
+
+import { motion } from 'motion/react';
+
+import { Rune } from '../constants/runes';
+
+import { PlayerColor } from '../types';
+
+
+
+interface GameBoardProps {
+
+  outerChips: (PlayerColor | null)[];
+
+  innerChips: (PlayerColor | null)[];
+
+  middleChips: (PlayerColor | null)[];
+
+  outerRunes: Rune[];
+
+  innerRunes: Rune[];
+
+  middlePairs: Rune[][];
+
+  isFinished?: boolean;
+
+}
+
+
+
+export default function GameBoard({ 
+
+  outerChips, innerChips, middleChips, outerRunes, innerRunes, middlePairs, isFinished 
+
+}: GameBoardProps) {
+
+  const size = 500;
+
+  const center = size / 2;
+
+  const outerRadius = 230;
+
+  const middleRadius = 155;
+
+  const innerRadius = 90;
+
+  const hubRadius = 40;
+
+
+
+  return (
+
+    <div className="relative flex items-center justify-center p-4 bg-neutral-900 rounded-3xl shadow-2xl overflow-hidden border border-stone-800">
+
+      <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/dark-wood.png")', backgroundColor: '#3e1a0d' }} />
+
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="relative z-10 drop-shadow-2xl">
+
+        <defs>
+
+          <radialGradient id="mahogany-grad" cx="50%" cy="50%" r="50%">
+
+            <stop offset="0%" stopColor="#7c3a27" /><stop offset="70%" stopColor="#4a1c0f" /><stop offset="100%" stopColor="#2d1109" />
+
+          </radialGradient>
+
+          <radialGradient id="amber-glow-grad" cx="50%" cy="50%" r="50%">
+
+            <stop offset="0%" stopColor="rgba(251, 191, 36, 0.8)" /><stop offset="50%" stopColor="rgba(180, 83, 9, 0.4)" /><stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
+
+          </radialGradient>
+
+          <filter id="gold-glow"><feGaussianBlur stdDeviation="1" result="blur" /><feComposite in="SourceGraphic" in2="blur" operator="over" /></filter>
+
+          <filter id="chip-shadow"><feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.5" /></filter>
+
+        </defs>
+
+
+
+        {isFinished && <motion.circle initial={{ r: 0, opacity: 0 }} animate={{ r: size, opacity: 1 }} transition={{ duration: 3, ease: "easeOut" }} cx={center} cy={center} fill="url(#amber-glow-grad)" />}
+
+
+
+        <motion.g animate={isFinished ? { scale: 1.05, filter: "brightness(0.6) contrast(1.2)" } : {}} transition={{ duration: 2 }}>
+
+          <circle cx={center} cy={center} r={outerRadius + 12} fill="#1a0a05" stroke="#3e1a0d" strokeWidth="4" />
+
+          <circle cx={center} cy={center} r={outerRadius} fill="url(#mahogany-grad)" stroke="#b8860b" strokeWidth="3" />
+
+          {Array.from({ length: 12 }).map((_, i) => {
+
+            const angle = (i * 30);
+
+            const x2 = center + outerRadius * Math.cos((angle * Math.PI) / 180);
+
+            const y2 = center + outerRadius * Math.sin((angle * Math.PI) / 180);
+
+            const x1 = center + hubRadius * Math.cos((angle * Math.PI) / 180);
+
+            const y1 = center + hubRadius * Math.sin((angle * Math.PI) / 180);
+
+            return (
+
+              <motion.g key={i} animate={isFinished ? { x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20, rotate: (Math.random() - 0.5) * 5 } : {}} transition={{ duration: 2, ease: "easeInOut" }}>
+
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={isFinished ? "#f59e0b" : "rgba(212, 175, 55, 0.2)"} strokeWidth={isFinished ? "3" : "1"} />
+
+              </motion.g>
+
+            );
+
+          })}
+
+          <circle cx={center} cy={center} r={middleRadius} fill="none" stroke="rgba(212, 175, 55, 0.3)" strokeWidth="1.5" />
+
+          <circle cx={center} cy={center} r={innerRadius} fill="none" stroke="rgba(212, 175, 55, 0.3)" strokeWidth="1.5" />
+
+          <circle cx={center} cy={center} r={hubRadius} fill="rgba(0,0,0,0.5)" stroke="#d4af37" strokeWidth="2" />
+
+        </motion.g>
+
+
+
+        {Array.from({ length: 12 }).map((_, i) => {
+
+          const baseAngle = (i * 30) + 15;
+
+          const outerR = (outerRadius + middleRadius) / 2;
+
+          const ox = center + outerR * Math.cos((baseAngle * Math.PI) / 180);
+
+          const oy = center + outerR * Math.sin((baseAngle * Math.PI) / 180);
+
+          const midR = (middleRadius + innerRadius) / 2;
+
+          const m1x = center + midR * Math.cos(((baseAngle - 8) * Math.PI) / 180);
+
+          const m1y = center + midR * Math.sin(((baseAngle - 8) * Math.PI) / 180);
+
+          const m2x = center + midR * Math.cos(((baseAngle + 8) * Math.PI) / 180);
+
+          const m2y = center + midR * Math.sin(((baseAngle + 8) * Math.PI) / 180);
+
+          const innerR = (innerRadius + hubRadius) / 2;
+
+          const ix = center + innerR * Math.cos((baseAngle * Math.PI) / 180);
+
+          const iy = center + innerR * Math.sin((baseAngle * Math.PI) / 180);
+
+
+
+          return (
+
+            <g key={i}>
+
+              <text x={ox} y={oy} fill="#d4af37" fontSize="18" textAnchor="middle" dominantBaseline="middle" className="select-none font-serif font-bold" style={{ filter: 'url(#gold-glow)' }} transform={`rotate(${baseAngle + 90}, ${ox}, ${oy})`}>{outerRunes[i].char}</text>
+
+              <text x={m1x} y={m1y} fill="#d4af37" fontSize="14" textAnchor="middle" dominantBaseline="middle" className="select-none font-serif opacity-90" transform={`rotate(${baseAngle + 90}, ${m1x}, ${m1y})`}>{middlePairs[i][0].char}</text>
+
+              <text x={m2x} y={m2y} fill="#d4af37" fontSize="14" textAnchor="middle" dominantBaseline="middle" className="select-none font-serif opacity-90" transform={`rotate(${baseAngle + 90}, ${m2x}, ${m2y})`}>{middlePairs[i][1].char}</text>
+
+              <text x={ix} y={iy} fill="#d4af37" fontSize="16" textAnchor="middle" dominantBaseline="middle" className="select-none font-serif font-bold opacity-90" transform={`rotate(${baseAngle + 90}, ${ix}, ${iy})`}>{innerRunes[i].char}</text>
+
+              {outerChips[i] && <motion.circle layoutId={`chip-outer-${i}`} initial={{ scale: 0 }} animate={{ scale: 1 }} cx={ox} cy={oy} r="15" fill={outerChips[i] === 'black' ? '#111' : '#f0f0f0'} stroke={outerChips[i] === 'black' ? '#333' : '#ccc'} strokeWidth="2" style={{ filter: 'url(#chip-shadow)' }} />}
+
+              {innerChips[i] && <motion.circle layoutId={`chip-inner-${i}`} initial={{ scale: 0 }} animate={{ scale: 1 }} cx={ix} cy={iy} r="12" fill={innerChips[i] === 'black' ? '#111' : '#f0f0f0'} stroke={innerChips[i] === 'black' ? '#333' : '#ccc'} strokeWidth="2" style={{ filter: 'url(#chip-shadow)' }} />}
+
+              {middleChips[i] && <motion.circle layoutId={`chip-middle-${i}`} initial={{ scale: 0 }} animate={{ scale: 1 }} cx={(m1x + m2x) / 2} cy={(m1y + m2y) / 2} r="18" fill={middleChips[i] === 'black' ? '#111' : '#f0f0f0'} stroke={middleChips[i] === 'black' ? '#333' : '#ccc'} strokeWidth="3" style={{ filter: 'url(#chip-shadow)' }} />}
+
+            </g>
+
+          );
+
+        })}
+
+
+
+        <circle cx={center} cy={center} r={hubRadius - 5} fill="#0d1b2a" />
+
+        <foreignObject x={center - 25} y={center - 25} width="50" height="50">
+
+          <div className="w-full h-full flex items-center justify-center text-blue-400"><Bird size={32} strokeWidth={1} className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" /></div>
+
+        </foreignObject>
+
+      </svg>
+
+    </div>
+
+  );
+
+}
+
+
+#src/components/Dice.tsx
+
+
+import React from 'react';
+
+import { Rune } from '../constants/runes';
+
+import { motion, AnimatePresence } from 'motion/react';
+
+
+
+interface DiceProps {
+
+  rune: Rune | null;
+
+  rolling: boolean;
+
+  label: string;
+
+}
+
+
+
+export default function Dice({ rune, rolling, label }: DiceProps) {
+
+  return (
+
+    <div className="flex flex-col items-center gap-2">
+
+      <span className="text-stone-500 uppercase text-[10px] tracking-widest font-mono">{label}</span>
+
+      <div className="relative w-16 h-16 bg-stone-100 rounded-xl shadow-lg flex items-center justify-center border-b-4 border-stone-300 overflow-hidden">
+
+        <AnimatePresence mode="wait">
+
+          {rolling ? (
+
+            <motion.div key="rolling" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.2 }} className="text-stone-300 text-3xl font-serif select-none">ᚠᚢᚦ</motion.div>
+
+          ) : (
+
+            <motion.div key={rune?.id || 'empty'} initial={{ y: 20, opacity: 0, rotate: -15 }} animate={{ y: 0, opacity: 1, rotate: 0 }} className="text-stone-800 text-4xl font-serif select-none">{rune?.char || '?'}</motion.div>
+
+          )}
+
+        </AnimatePresence>
+
+        <div className="absolute inset-x-0 bottom-0 h-1 bg-stone-200" />
+
+        <div className="absolute top-1 left-1 w-1 h-1 rounded-full bg-stone-300" />
+
+        <div className="absolute top-1 right-1 w-1 h-1 rounded-full bg-stone-300" />
+
+      </div>
+
+    </div>
+
+  );
+
+}
