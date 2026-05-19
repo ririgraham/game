@@ -398,7 +398,7 @@ export default function App() {
 
           <motion.div initial={{ opacity: 0, scale: 0.9, y: 50 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 1.5, delay: 1.5 }} className="fixed inset-0 z-[110] flex flex-col items-center justify-center p-8 text-center bg-[#1a0a05]/95 overflow-y-auto">
 
-            <div className="max-w-xl w-full flex flex-col items-center">
+            <div className="max-w-sm w-full flex flex-col items-center">
 
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} className="mb-8 opacity-40 text-amber-500"><Bird size={80} strokeWidth={1} /></motion.div>
 
