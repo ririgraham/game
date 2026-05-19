@@ -50,7 +50,7 @@ export default function App() {
 
     isRolling: false,
 
-    message: 'Добро пожаловать в Древние Руны. Выберите свой путь.',
+    message: 'Привет, читатель! Рад, что вы отыскали игру! Развлекайтесь :)',
 
     failedRolls: { black: 0, white: 0 }
 
@@ -364,7 +364,7 @@ export default function App() {
 
         <h1 className="text-4xl font-extrabold tracking-widest uppercase text-[#d4af37] drop-shadow-lg">
 
-          Древние Руны
+          Кругоявь
 
         </h1>
 
@@ -372,7 +372,7 @@ export default function App() {
 
           <AnimatePresence mode="wait">
 
-             <motion.p key={state.message} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="text-stone-400 italic text-sm">
+             <motion.p key={state.message} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="text-stone-400 italic text-base">
 
                 {state.message}
 
@@ -402,7 +402,8 @@ export default function App() {
 
               <motion.div animate={{ rotate: 360 }} transition={{ duration: 30, repeat: Infinity, ease: "linear" }} className="mb-8 opacity-40 text-amber-500"><Bird size={80} strokeWidth={1} /></motion.div>
 
-              <motion.h2 initial={{ letterSpacing: "0.1em", opacity: 0 }} animate={{ letterSpacing: "0.4em", opacity: 1 }} transition={{ duration: 2, delay: 2 }} className="text-4xl font-bold text-amber-500 mb-8 uppercase font-serif drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">Мир Изменился</motion.h2>
+              <motion.h2 initial={{ letterSpacing: "0.1em", opacity: 0 }} animate={{ letterSpacing: "0.4em", opacity: 1 }} transition={{ duration: 2, delay: 2 }} className="text-4xl font-bold text-amber-500 mb-8 uppercase font-serif drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]">Прыжок в параллельную Вселенную завершен</motion.h2>
+
 
               <div className="relative p-8 border-y border-amber-600/30">
 
@@ -550,11 +551,11 @@ export default function App() {
 
 
 
-      <footer className="mt-8 text-stone-700 text-[10px] tracking-widest uppercase flex gap-4 opacity-50">
+      <footer className="mt-8 text-stone-700 text-[15px] tracking-widest uppercase flex gap-4 opacity-50">
 
-        <span>Раунд 1: Сбор</span>
+        <span>Раунд 1: Сбор карты</span>
 
-        <span>Раунд 2: Узоры</span>
+        <span>Раунд 2: Комбинации</span>
 
       </footer>
 
