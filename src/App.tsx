@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Bird } from 'lucide-react';
 
 import { WORLD_QUOTES } from './constants/quotes';
+import { div } from 'motion/react-m';
 
 
 
@@ -29,9 +30,81 @@ const MIDDLE_PAIRS = Array.from({ length: 12 }, (_, i) => [
 ]);
 
 
+const INTRO_SLIDES = [
+  {
+    title: "Привет, читатель!",
+    text: [
+    "Древние предания гласят о мистических Рунах Судьбы, некогда высеченных на вековых вратах между мирами.",
+    "Внутри этого священного круга сокрыта великая сила, способная изменять ткань времени и реальности.",
+    "Многие веками пытались подчинить её себе, но круг открывался лишь избранным — тем, чья воля была чиста.",
+    "Слишком долго эти магические руны спали, окутанные космической пылью в ожидании достойного соперника.",
+    "Теперь пришло ваше время сделать первый осторожный шаг в неизведанные чертоги судьбы."
+    ]
+  },
+  {
+    title: "Вызов Хранителю",
+    text: [
+      "Вам предстоит бросить вызов древнейшему хранителю круга — бесплотному духу этих чертогов.",
+      "В первом раунде вы должны призвать силу рун, занимая свободные ячейки диска своей энергией.",
+      "Хранитель будет делать то же самое, заполняя внутреннее кольцо своими белыми знаками.",
+      "Опередите его, чтобы занять руны и подготовить свои силы к решающему обряду сопряжения.",
+      "Будьте хладнокровны и расчетливы: первый этап определит ваше положение на поле боя."
+    ]
+  },
+  {
+    title: "Таинство Сопряжения",
+    text: [
+      "Второй этап потребует от вас высшего мастерства плетения тончайших линий вероятности.",
+      "Чтобы открыть таинственные врата в новый мир, необходимо соединить ваши руны в сопряженные пары.",
+      "Следите за совпадениями при каждом броске костей — только идеальные узоры позволят вам победить.",
+      "А когда последняя пара будет сложена — доска расколется, и янтарное свечение укажет вам новый путь.",
+      "Врата открываются. Сделайте шаг навстречу своей новой судьбе и да начнется великий ритуал!"
+    ]
+  }
+];
 
 export default function App() {
 
+// Начальное состояние для контроля слайдов (0 — первый слайд, 3 — игра началась)
+  const [introStep, setIntroStep] = useState<number>(0);
+  const [outerRunes, setOuterRunes] = useState<Rune[]>(() => [...RUNES].sort(() => 0.5 - Math.random()));
+  const [innerRunes, setInnerRunes] = useState<Rune[]>(() => [...RUNES].sort(() => 0.5 - Math.random()));
+
+// ... (остальные стейты игры)
+
+// Обновленная функция перезапуска (перезапускает саму игру, но сохраняет introStep = 3)
+  const resetGame = () => {
+
+    setState({
+
+      stage: GameStage.Setup,
+
+      playerColor: null,
+
+      turn: 'black',
+
+      outerChips: Array(12).fill(null),
+
+      innerChips: Array(12).fill(null),
+
+      middleChips: Array(12).fill(null),
+
+      lastRoll: { player: [], ai: [] },
+
+      isRolling: false,
+
+      message: 'Добро пожаловать в Древние Руны. Выберите свой путь.',
+
+      failedRolls: { black: 0, white: 0 }
+
+    });
+    setEndQuote('');
+
+    setOuterRunes([...RUNES].sort(() => 0.5 - Math.random()));
+
+    setInnerRunes([...RUNES].sort(() => 0.5 - Math.random()));
+// introStep НЕ сбрасывается обратно в 0, чтобы слайды не появлялись повторно!
+};
   const [state, setState] = useState<GameState>({
 
     stage: GameStage.Setup,
@@ -50,7 +123,7 @@ export default function App() {
 
     isRolling: false,
 
-    message: 'Привет, читатель! Рад, что вы отыскали игру! Развлекайтесь :)',
+    message: '',
 
     failedRolls: { black: 0, white: 0 }
 
@@ -359,6 +432,136 @@ export default function App() {
   return (
 
     <div className="min-h-screen bg-[#1a0a05] flex flex-col items-center justify-center font-serif text-stone-200 p-4">
+
+      {/* Слайды Вступления */}
+
+      <AnimatePresence>
+
+        {introStep < 3 && (
+
+          <motion.div
+
+            initial={{ opacity: 1 }}
+
+            exit={{ opacity: 0 }}
+
+            transition={{ duration: 0.8 }}
+
+            onClick={() => setIntroStep(prev => prev + 1)}
+
+            className="fixed inset-0 z-[200] bg-[#120603] flex flex-col items-center justify-center p-6 md:p-12 text-center cursor-pointer select-none overflow-hidden"
+          >
+            {/* Огибающие магические орбиты на заднем фоне */}
+            <div className="absolute inset-0 opacity-10 flex items-center justify-center pointer-events-none">
+             
+              <div className="w-[600px] h-[600px] border border-amber-500/35 rounded-full animate-[spin_120s_linear_infinite]" />
+             
+              <div className="absolute w-[400px] h-[400px] border border-amber-600/20 rounded-full animate-[spin_80s_linear_infinite_reverse]" />
+           
+            </div>
+
+
+            <div className="max-w-2xl w-full flex flex-col items-center relative z-10 min-h-[450px] justify-between py-8">
+             
+              <div className="w-full flex-1 flex flex-col justify-center items-center">
+              
+                <AnimatePresence mode="wait">
+                 
+                  <motion.div
+                 
+                    key={introStep}
+                   
+                    initial={{ opacity: 0, y: 30 }}
+                  
+                    animate={{ opacity: 1, y: 0 }}
+                  
+                    exit={{ opacity: 0, y: -30 }}
+                  
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                 
+                    className="flex flex-col items-center"
+                 
+                  >
+                 
+                    <h2 className="text-3xl md:text-5xl font-bold text-[#d4af37] tracking-[0.2em] uppercase font-serif mb-8 drop-shadow-[0_0_12px_rgba(212,175,55,0.3)]">
+                  
+                    {INTRO_SLIDES[introStep].title}
+                 
+                    </h2>
+
+
+                    <div className="space-y-4 md:space-y-6 max-w-xl text-stone-300 font-serif leading-relaxed text-base md:text-lg italic opacity-90">
+ 
+  {INTRO_SLIDES[introStep].text.map((sentence, idx) => (
+                    
+                        <p key={idx}>{sentence}</p>
+                  
+                      ))}
+
+                    </div>
+
+                  </motion.div>
+
+                </AnimatePresence>
+
+              </div>
+
+
+              <div className="mt-8 flex flex-col items-center gap-4">
+
+                {/* Пагинация (точки) */}
+
+                <div className="flex gap-2">
+
+                  {INTRO_SLIDES.map((_, idx) => (
+
+                    <div
+
+                      key={idx}
+
+                      className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === introStep ? 'bg-[#d4af37] scale-125' : 'bg-stone-700'}`}
+                   
+                    />
+
+                  ))}
+
+                </div>
+
+
+                {/* Мерцающая подсказка к действию */}
+
+                <motion.span
+
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+
+                  transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+
+                  className="text-amber-500/40 text-xs tracking-widest uppercase font-sans mt-2"
+
+                >
+
+                  Кликните в любом месте экрана для продолжения
+
+                </motion.span>
+
+              </div>
+
+            </div>
+
+          </motion.div>
+
+        )}
+
+      </AnimatePresence>
+
+
+      {/* Основной заголовок игры */}
+
+      <header className="mb-6 text-center">
+
+        {/* ... */}
+
+      </header>
 
       <header className="mb-6 text-center">
 
